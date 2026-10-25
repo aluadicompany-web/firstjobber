@@ -8,8 +8,14 @@ export const menu: Record<Item, { name: string; price: number; cost: number; sec
   drink: { name: 'น้ำอัดลม', price: 19, cost: 4, seconds: 1, icon: '🥤' },
 };
 export type Customer = { id: number; name: string; items: Item[]; patience: number; maxPatience: number; accepted: boolean };
+export const orderTemplates: readonly (readonly Item[])[] = [['chicken','drink'],['chicken','fries'],['chicken'],['chicken','fries','drink'],['fries','drink']];
+export type ReactionEvent = { customerId:number; name:string; index:number; mood:'happy'|'angry' };
 export type FoodEvent = { type: 'ready' | 'add' | 'return'; item: Item; slot: number };
 export class Shift {
+  constructor(private readonly random:()=>number=Math.random) {}
+  private orderBag:number[]=[];
+  private lastOrder=-1;
+  reactionEvents:ReactionEvent[]=[];
   remaining = 180; elapsed = 0; spawnIn = 8; nextId = 1;
   customers: Customer[] = []; selected = 0;
   stock: Record<Item, number> = { chicken: 0, fries: 0, drink: 0 };
@@ -33,9 +39,18 @@ export class Shift {
   start() { this.started = true; this.spawn(); this.say('ดูชื่อและอาหารเหนือหัว แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์'); }
   spawn() {
     if (this.customers.length >= 4) return;
-    const id = this.nextId++;
-    const sets: Item[][] = [['chicken', 'drink'], ['chicken', 'fries'], ['chicken'], ['chicken', 'fries', 'drink'], ['fries', 'drink']];
-    this.customers.push({ id, name: ['มิน', 'เจ', 'พลอย', 'ต้น', 'ฟ้า'][(id - 1) % 5], items: sets[(id - 1) % sets.length].slice(), patience: 55, maxPatience: 55, accepted: false });
+    if (!this.orderBag.length) this.orderBag=orderTemplates.map((_,index)=>index);
+    const key=(order:readonly Item[])=>[...order].sort().join(',');
+    const waiting=new Set(this.customers.map(c=>key(c.items)));
+    const eligible=this.orderBag.filter(index=>index!==this.lastOrder&&!waiting.has(key(orderTemplates[index])));
+    // Keep this round intact if its remaining recipes are already being waited for.
+    if (!eligible.length) return;
+    const recipe=eligible[Math.min(eligible.length-1,Math.max(0,Math.floor(this.random()*eligible.length)))];
+    this.orderBag.splice(this.orderBag.indexOf(recipe),1);this.lastOrder=recipe;
+    const names=['มิน','เจ','พลอย','ต้น','ฟ้า','แป้ง','บอส','นัท','เมย์','ปอนด์'].filter(name=>!this.customers.some(c=>c.name===name));
+    const name=names[Math.min(names.length-1,Math.max(0,Math.floor(this.random()*names.length)))];
+    const id=this.nextId++;
+    this.customers.push({id,name,items:[...orderTemplates[recipe]],patience:55,maxPatience:55,accepted:false});
     if (!this.current) this.selected = id;
   }
   select(id: number) { if (this.customers.some(c => c.id === id)) this.selected = id; }
@@ -76,8 +91,11 @@ export class Shift {
   }
   serve() {
     const c = this.current;
-    if (!c?.accepted) return this.say('คลิกตัวลูกค้าเพื่อรับออเดอร์ก่อนเสิร์ฟ');
-    if (!this.trayMatches) return this.say(`อาหารยังไม่ตรงออเดอร์คุณ${c.name} ตรวจถาดก่อนเสิร์ฟ`);
+    if (!c) return this.say('ยังไม่มีลูกค้าที่เลือกให้เสิร์ฟ');
+    const react=(mood:'happy'|'angry')=>this.reactionEvents.push({customerId:c.id,name:c.name,index:this.customers.indexOf(c),mood});
+    if (!c.accepted) {react('angry');return this.say('คลิกตัวลูกค้าเพื่อรับออเดอร์ก่อนเสิร์ฟ');}
+    if (!this.trayMatches) {react('angry');return this.say(`อาหารยังไม่ตรงออเดอร์คุณ${c.name} ตรวจถาดก่อนเสิร์ฟ`);}
+    react('happy');
     const tip = c.patience > 30 ? 10 : 0;
     const total = c.items.reduce((sum, i) => sum + menu[i].price, 0) + tip;
     this.moneyEvents.push({amount:total});

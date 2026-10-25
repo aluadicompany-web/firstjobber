@@ -23,10 +23,12 @@ try {
  }
  await page.setViewportSize({width:1366,height:768});await page.waitForTimeout(150);
  await page.locator('[data-customer="1"] .person').click();
- await page.locator('[data-cook="chicken"]').click();await page.locator('[data-cook="drink"]').click();
- await page.waitForFunction(()=>document.getElementById('stock-chicken').textContent==='1/5');
- await page.locator('[data-add="chicken"]:not(:disabled)').first().click();await page.locator('[data-add="drink"]:not(:disabled)').first().click();await page.locator('#serve').click();
- assert.equal(await page.locator('#revenue').innerText(),'฿88');assert.match(await page.locator('#served').innerText(),/^1 /);
+ const recipe=(await page.locator('[data-customer="1"]').getAttribute('data-order-items')).split(',');
+ const prices={chicken:59,fries:29,drink:19};
+ for(const item of recipe)await page.locator(`[data-cook="${item}"]`).click();
+ for(const item of recipe){await page.waitForFunction(item=>document.getElementById(`stock-${item}`).textContent==='1/5',item);await page.locator(`[data-add="${item}"]:not(:disabled)`).first().click();}
+ const trayBox=await page.locator('.tray-station').boundingBox();await page.mouse.click(trayBox.x+trayBox.width*.04,trayBox.y+trayBox.height*.67);
+ assert.equal(await page.locator('#revenue').innerText(),`฿${recipe.reduce((sum,item)=>sum+prices[item],10)}`);assert.match(await page.locator('#served').innerText(),/^1 /);
  await page.locator('#pause').click();assert.equal(await page.locator('#overlay').getAttribute('data-mode'),'pause');await page.locator('#resume').click();
  assert.deepEqual(errors,[]);console.log('PASS: scaled mouse flow, food transfers, service and pause');
 }finally{await browser.close()}

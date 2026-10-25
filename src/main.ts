@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Shift, menu, items, capacity, type Item, type FoodEvent } from './game';
+import { Shift, menu, items, capacity, type Item, type FoodEvent, type ReactionEvent } from './game';
 import './style.css';
 import { equipmentArt, cashierArt } from './equipment';
 import { Employee } from './employee';
@@ -12,13 +12,13 @@ const $ = (id: string) => document.getElementById(id)!;
 const stationX = [30, 330, 750];
 const stationWidth = [30, 30, 21];
 const app = document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML = `<header><a class="brand" href="./"><span class="logo">C<span>★</span></span><span>CRISPY SHIFT<small>ร้านเล็ก ๆ ความฝันกรอบ ๆ</small></span></a><span class="edition">FAST FOOD SIMULATOR <b>07</b></span><button id="pause">⏸ หยุดเกม <kbd>Space</kbd></button></header>
+app.innerHTML = `<header><a class="brand" href="./"><span class="logo">C<span>★</span></span><span>CRISPY SHIFT<small>ร้านเล็ก ๆ ความฝันกรอบ ๆ</small></span></a><span class="edition">FAST FOOD SIMULATOR <b>08</b></span><button id="pause">⏸ หยุดเกม <kbd>Space</kbd></button></header>
 <main><div class="title"><div><span class="eyebrow">YOUR FIRST DAY · กะแรกของคุณ</span><h1>ความอร่อย เริ่มที่มือคุณ<span>✦</span></h1><p>คลิกลูกค้า → เข้าคิวทำอาหาร → หยิบจากตู้ลงถาด → คลิกถาดเสิร์ฟ</p></div></div>
 <div class="stats">${[['revenue','รายรับวันนี้'],['costs','วัตถุดิบวันนี้'],['profit','กำไรวันนี้'],['served','เสิร์ฟแล้ว'],['lost','ลูกค้าออกจากร้าน']].map(([id,label])=>`<div><span>${label}</span><strong id="${id}">0</strong></div>`).join('')}</div>
 <section class="restaurant"><div class="section-label"><span><i></i> LIVE KITCHEN</span><span>คลิกทุกอย่างในร้านได้เลย · <span id="count">ลูกค้า 0 / 4</span></span></div><div class="world-scroll"><div id="world"><div id="canvas-layer"></div><div class="storefront" aria-label="กระจกหน้าร้าน มองเห็นลานจอดรถ">${storefrontArt}</div>${restaurantDecor}<div class="interior-tint"></div><div class="sunbeam"></div><div class="business-hours in-game-clock"><span class="day-label">DAY 01 · วันนี้</span><span>เปิด <b>10:00</b> — ปิด <b>22:00</b></span><strong id="shop-clock">10:00</strong><span id="shop-state">พร้อมเปิดร้าน</span><span class="shift-remaining">เหลือ <b id="time">03:00</b> · เป้าหมาย 5 ออเดอร์</span><span class="hours-progress"><i id="hours-progress"></i></span></div><div id="customers" class="world-layer"></div><div class="cashier-station" id="cashier" style="left:6%;top:45%;width:18%;height:15%">${cashierArt}<span class="cashier-label">แคชเชียร์ · รับออเดอร์</span></div><div id="employee" role="img" aria-label="พนักงานของเรา รอที่แคชเชียร์"><span class="employee-tag">คุณ · พนักงาน</span><span class="chef-hat"></span><span class="chef-head"><i></i><i></i></span><span class="chef-body"><span></span></span><span class="chef-arm left"></span><span class="chef-arm right"></span><span class="chef-leg left"></span><span class="chef-leg right"></span><span class="chef-shadow"></span></div><span class="zone-label storage-zone">HOT HOLDING · ตู้อุ่นอาหาร</span><span class="zone-label kitchen-zone">HOT KITCHEN · ครัวร้อน</span>
 ${items.map((item,index)=>`<button class="machine world-button commercial-machine" data-cook="${item}" style="left:${stationX[index]/10}%;top:74%;width:${stationWidth[index]}%;height:26%" aria-label="ทำ${menu[item].name}">${equipmentArt(item)}<span class="machine-top"><strong>${menu[item].icon} ${menu[item].name}</strong><kbd>${index+1}</kbd></span><span class="machine-detail">${menu[item].seconds} วิ/ชิ้น · ต้นทุน ฿${menu[item].cost}</span><span class="machine-bottom"><span class="dial" id="dial-${item}"><span id="timer-${item}">+</span></span><span><b id="queue-${item}">0 / 5</b><small id="status-${item}">คลิกเพิ่มคิว</small></span></span><span class="queue-dots" id="dots-${item}"></span></button>`).join('')}
 <div class="cabinet" style="left:48%;top:45%;width:41%;height:17%">${displayCaseArt}<div class="cabinet-title">ตู้เก็บอาหาร <span>คลิกอาหารเพื่อหยิบลงถาด</span></div><div class="shelves">${items.map(item=>`<div class="shelf" data-shelf="${item}"><div class="shelf-label">${menu[item].name} <b id="stock-${item}">0/5</b></div><div class="slots">${Array.from({length:capacity},(_,slot)=>`<button class="food-slot" data-add="${item}" data-slot="${slot}" aria-label="หยิบ${menu[item].name}ชิ้นที่ ${slot+1}" disabled></button>`).join('')}</div></div>`).join('')}</div></div>
-<div class="tray-station" style="left:29%;top:49%;width:14%;height:16%"><div class="stacked-trays" aria-hidden="true"><i></i><i></i><i></i><i></i></div><button id="serve" class="serving-tray"><span class="tray-title">ถาดเสิร์ฟ <kbd>Enter</kbd></span><span id="tray-target">เลือกลูกค้าก่อน</span><span id="tray-items"></span><span id="tray-hint">หยิบอาหารจากตู้</span></button><button id="clear">คืนอาหารเข้าตู้ <kbd>⌫</kbd></button></div><div id="food-fx" class="world-layer" aria-hidden="true"></div></div></div><div class="world-caption"><span>อาหารสูงสุดชนิดละ 5 ชิ้น รวมในคิว ตู้ และถาด</span><span>เสิร์ฟเร็ว รับทิปเพิ่ม ฿10</span></div></section>
+<div class="tray-station" role="group" aria-label="บริเวณถาดเสิร์ฟ คลิกถาดหรือขอบเพื่อเสิร์ฟ" title="คลิกบริเวณถาดเพื่อเสิร์ฟออเดอร์" style="left:29%;top:49%;width:14%;height:16%"><div class="stacked-trays" aria-hidden="true"><i></i><i></i><i></i><i></i></div><button id="serve" class="serving-tray"><span class="tray-title">ถาดเสิร์ฟ <kbd>Enter</kbd></span><span id="tray-target">เลือกลูกค้าก่อน</span><span id="tray-items"></span><span id="tray-hint">หยิบอาหารจากตู้</span></button><button id="clear">คืนอาหารเข้าตู้ <kbd>⌫</kbd></button></div><div id="food-fx" class="world-layer" aria-hidden="true"></div></div></div><div class="world-caption"><span>อาหารสูงสุดชนิดละ 5 ชิ้น รวมในคิว ตู้ และถาด</span><span>เสิร์ฟเร็ว รับทิปเพิ่ม ฿10</span></div></section>
 <div id="message" role="status" aria-live="polite"></div><details class="help"><summary>วิธีเล่นและปุ่มลัด</summary><p>คลิกตัวลูกค้าเพื่อรับออเดอร์ ชื่อและอาหารอยู่เหนือหัว คลิกสถานีซ้ำเพื่อเข้าคิวทำทีละชิ้น อาหารที่เสร็จจะย้ายไปตู้ คลิกอาหารในตู้เพื่อจัดถาด แล้วคลิกถาดเพื่อเสิร์ฟให้ลูกค้าที่มีกรอบสีส้ม</p><p><kbd>Tab</kbd> เลือกลูกค้าถัดไป <kbd>E</kbd> รับออเดอร์ <kbd>1 2 3</kbd> เพิ่มคิวไก่ / ฟรายส์ / น้ำ <kbd>Q W R</kbd> หยิบลงถาด <kbd>Enter</kbd> เสิร์ฟ <kbd>Backspace</kbd> คืนอาหาร <kbd>Space</kbd> พัก</p></details><footer>CRISPY SHIFT · SMALL KITCHEN. BIG DREAMS.</footer></main><div id="overlay" class="overlay"></div>`;
 function fitScene() {
   const viewport=document.querySelector<HTMLElement>('.world-scroll')!, world=$('world');
@@ -42,8 +42,11 @@ function action(fn: () => void) {
   if (!shift.started || shift.paused || shift.ended) return;
   fn(); render();
 }
-$('serve').onclick = () => action(() => shift.serve());
-$('clear').onclick = () => action(() => shift.clear());
+document.querySelector<HTMLElement>('.tray-station')!.onclick = event => {
+  if ((event.target as Element).closest('#clear')) return;
+  action(() => shift.serve());
+};
+$('clear').onclick = event => {event.stopPropagation();action(() => shift.clear());};
 document.querySelectorAll<HTMLButtonElement>('[data-cook]').forEach(b => b.onclick = () => action(() => shift.cook(b.dataset.cook as Item)));
 document.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(b => b.onclick = () => action(() => shift.add(b.dataset.add as Item)));
 function pause() { if (!shift.started || shift.ended) return; shift.paused = !shift.paused; render(); }
@@ -93,6 +96,18 @@ function moneyPopup(amount:number,item?:Item) {
   const animation=popup.animate([{transform:'translate(-50%,0) scale(.85)',opacity:1},{transform:'translate(-50%,-32px) scale(1.1)',opacity:1,offset:.3},{transform:'translate(-50%,-85px) scale(1)',opacity:0}],{duration:1600,easing:'ease-out'});
   animation.onfinish=()=>popup.remove();
 }
+function reactionPopup(event:ReactionEvent) {
+  $('food-fx').querySelector(`[data-reaction-customer="${event.customerId}"]`)?.remove();
+  const node=document.createElement('span');node.className=`customer-reaction ${event.mood}`;
+  node.dataset.reactionCustomer=String(event.customerId);node.dataset.mood=event.mood;
+  const emoji=event.mood==='happy'?'😊':'😡';
+  node.setAttribute('role','img');node.setAttribute('aria-label',`${event.mood==='happy'?'เสิร์ฟถูก':'เสิร์ฟผิด'} คุณ${event.name}`);
+  node.innerHTML=`<span>${emoji}</span><small>#${event.customerId} คุณ${event.name}</small>`;
+  node.style.left=`${14.5+event.index*22}%`;node.style.top='21%';
+  $('food-fx').append(node);
+  const animation=node.animate([{transform:'translate(-50%,0) scale(.65)',opacity:0},{transform:'translate(-50%,-12px) scale(1.15)',opacity:1,offset:.15},{transform:'translate(-50%,-20px) scale(1)',opacity:1,offset:.8},{transform:'translate(-50%,-42px) scale(.9)',opacity:0}],{duration:2200,easing:'ease-out'});
+  animation.onfinish=()=>node.remove();
+}
 function render() {
   for (const work of shift.workEvents.splice(0)) employee.enqueue(work);
   const actor=$('employee');actor.style.left=`${employee.x/10}%`;actor.style.top=`${employee.y/9}%`;
@@ -119,6 +134,8 @@ function render() {
   shift.customers.forEach((c,index)=>{
     let button = document.querySelector<HTMLButtonElement>(`[data-customer="${c.id}"]`);
     if (!button) { button=document.createElement('button');button.dataset.customer=String(c.id);button.innerHTML=`<span class="bubble"><span class="customer-name">#${c.id} คุณ${c.name}<span class="accepted-badge">✓</span></span><span class="requested-food">${c.items.map(item=>`<span title="${menu[item].name}">${menu[item].icon}</span>`).join('')}</span><span class="customer-status"></span><span class="patience"><i></i></span></span><span class="person"><span class="head">••<span>⌣</span></span><span class="body"></span><span class="feet"></span></span>`; $('customers').append(button); }
+    button.dataset.orderItems=c.items.join(',');
+    button.dataset.customerName=c.name;
     button.className=`customer ${shift.selected===c.id?'selected':''} ${c.accepted?'accepted':''}`;
     button.style.left=`${7+index*22}%`;
     button.setAttribute('aria-label',`คุณ${c.name} ต้องการ ${c.items.map(i=>menu[i].name).join(' และ ')} ${c.accepted?'รับออเดอร์แล้ว':'คลิกเพื่อรับออเดอร์'}`);
@@ -146,6 +163,7 @@ function render() {
   $('message').textContent=shift.message;
   $('pause').innerHTML=`${shift.paused?'▶ เล่นต่อ':'⏸ หยุดเกม'} <kbd>Space</kbd>`;
   for (const event of shift.events.splice(0)) fly(event);
+  for (const event of shift.reactionEvents.splice(0)) reactionPopup(event);
   for(const animation of $('food-fx').getAnimations({subtree:true})){if(shift.paused||shift.ended)animation.pause();else if(animation.playState==='paused')animation.play();}
   const mode=!shift.started?'start':shift.ended?'end':shift.paused?'pause':'';
   const overlay=$('overlay');if(overlay.dataset.mode===mode)return;overlay.dataset.mode=mode;overlay.style.display=mode?'grid':'none';
