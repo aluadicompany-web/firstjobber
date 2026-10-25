@@ -65,7 +65,7 @@ try {
  assert.ok(bounds.head>=bounds.bubble,'Customer must stay below the order bubble');
  await capture('artifacts/kitchen-mobile-left.png');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
- assert.deepEqual(errors,[]);console.log('PASS: mobile scrollable scene, customer/station/cabinet/tray clicks, no page errors');
+ assert.deepEqual(errors,[]);console.log('PASS: mobile fitted scene, customer/station/cabinet/tray clicks, no page errors');
  if(!process.argv.includes('--orders')&&!process.argv.includes('--kitchen')) {
   console.log('Waiting for sunset, night and shift end...');
   await page.waitForFunction(()=>document.getElementById('world').dataset.lighting==='sunset',null,{timeout:160000});await capture('artifacts/storefront-sunset.png');
