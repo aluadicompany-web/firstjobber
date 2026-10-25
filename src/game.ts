@@ -1,5 +1,6 @@
 import type { Work } from './employee';
 export type Item = 'chicken' | 'fries' | 'drink';
+export type Upgrade = Exclude<Item,'drink'>;
 export const items: Item[] = ['chicken', 'fries', 'drink'];
 export const capacity = 5;
 export const menu: Record<Item, { name: string; price: number; cost: number; seconds: number; icon: string }> = {
@@ -12,7 +13,9 @@ export const orderTemplates: readonly (readonly Item[])[] = [['chicken','drink']
 export type ReactionEvent = { customerId:number; name:string; index:number; mood:'happy'|'angry' };
 export type FoodEvent = { type: 'ready' | 'add' | 'return'; item: Item; slot: number };
 export class Shift {
-  constructor(private readonly random:()=>number=Math.random) {}
+  constructor(private readonly random:()=>number=Math.random, readonly stage:1|2=1, readonly upgrade:Upgrade|null=null) {this.spawnIn=this.arrivalInterval;}
+  get patienceSeconds(){return this.stage===2?44:55;}
+  cookSeconds(item:Item){return menu[item].seconds-(this.stage===2&&this.upgrade===item?1:0);}
   private orderBag:number[]=[];
   private lastOrder=-1;
   reactionEvents:ReactionEvent[]=[];
@@ -36,7 +39,7 @@ export class Shift {
     return !!this.current?.accepted && [...this.current.items].sort().join() === [...this.tray].sort().join();
   }
   owned(item: Item) { return this.stock[item] + this.queued[item] + this.tray.filter(i => i === item).length; }
-  get arrivalInterval() { return this.customers.length>=2?7:6; }
+  get arrivalInterval() { return this.stage===2?(this.customers.length>=2?6.5:5.5):(this.customers.length>=2?7:6); }
   private refillEmptyShop() {
     if(!this.started||this.paused||this.ended||this.remaining<=0||this.customers.length)return false;
     this.spawn();this.spawnIn=this.arrivalInterval;return this.customers.length>0;
@@ -55,7 +58,7 @@ export class Shift {
     const names=['มิน','เจ','พลอย','ต้น','ฟ้า','แป้ง','บอส','นัท','เมย์','ปอนด์'].filter(name=>!this.customers.some(c=>c.name===name));
     const name=names[Math.min(names.length-1,Math.max(0,Math.floor(this.random()*names.length)))];
     const id=this.nextId++;
-    this.customers.push({id,name,items:[...orderTemplates[recipe]],patience:55,maxPatience:55,accepted:false});
+    this.customers.push({id,name,items:[...orderTemplates[recipe]],patience:this.patienceSeconds,maxPatience:this.patienceSeconds,accepted:false});
     if (!this.current) this.selected = id;
   }
   select(id: number) { if (this.customers.some(c => c.id === id)) this.selected = id; }
@@ -70,7 +73,7 @@ export class Shift {
   cook(item: Item) {
     if (this.owned(item) >= capacity) return this.say(`${menu[item].name}ครบ 5 ชิ้นแล้ว (รวมคิว ตู้ และถาด) เสิร์ฟก่อนทำเพิ่ม`);
     this.queued[item]++;
-    if (this.queued[item] === 1) this.cooking[item] = menu[item].seconds;
+    if (this.queued[item] === 1) this.cooking[item] = this.cookSeconds(item);
     this.costs += menu[item].cost;
     this.workEvents.push({kind:'cook',item});
     this.moneyEvents.push({amount:-menu[item].cost,item});
@@ -121,7 +124,7 @@ export class Shift {
         budget -= this.cooking[item];
         this.queued[item]--; this.stock[item]++;
         this.events.push({ type: 'ready', item, slot: this.stock[item] - 1 });
-        this.cooking[item] = this.queued[item] > 0 ? menu[item].seconds : 0;
+        this.cooking[item] = this.queued[item] > 0 ? this.cookSeconds(item) : 0;
       }
       if (this.queued[item] > 0) this.cooking[item] -= budget;
     }
