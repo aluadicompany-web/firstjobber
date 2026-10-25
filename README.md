@@ -68,6 +68,7 @@ npm run dev
 npm test
 npm run build
 # เปิด dev server ก่อน แล้วใช้ terminal อีกอัน:
+npm run test:tray # ตรวจคลิกค้างบนไอคอน ขอบ ข้อความ และกองถาด 10 จุด ทั้งจอคอมและขนาดมือถือ
 npm run test:viewport # ตรวจเห็นฉากครบ 6 ขนาดจอและคลิกเล่นหลังย่อ
 npm run test:kitchen # ตรวจครัวและคิว ~25 วินาที
 npm run test:orders  # ตรวจหลายลูกค้า ~35 วินาที
