@@ -1,3 +1,4 @@
+import type { Work } from './employee';
 export type Item = 'chicken' | 'fries' | 'drink';
 export const items: Item[] = ['chicken', 'fries', 'drink'];
 export const capacity = 5;
@@ -16,6 +17,10 @@ export class Shift {
   queued: Record<Item, number> = { chicken: 0, fries: 0, drink: 0 };
   cooking: Record<Item, number> = { chicken: 0, fries: 0, drink: 0 };
   events: FoodEvent[] = []; tray: Item[] = [];
+  workEvents: Work[] = [];
+  moneyEvents: {amount:number; item?:Item}[] = [];
+  get shopMinutes() { return Math.min(22*60,10*60+Math.floor((180-this.remaining)*4)); }
+  get shopTime() { return `${Math.floor(this.shopMinutes/60).toString().padStart(2,'0')}:${(this.shopMinutes%60).toString().padStart(2,'0')}`; }
   revenue = 0; costs = 0; served = 0; lost = 0; combo = 0;
   paused = false; ended = false; started = false;
   message = 'เปิดร้าน แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์';
@@ -38,6 +43,7 @@ export class Shift {
     const c = this.current;
     if (!c) return this.say('ยังไม่มีลูกค้าในคิว');
     c.accepted = true;
+    this.workEvents.push({kind:'cashier'});
     this.say(`รับออเดอร์ #${c.id} คุณ${c.name} แล้ว คลิกสถานีเพื่อทำอาหาร`);
   }
   say(message: string) { this.message = message; }
@@ -46,6 +52,8 @@ export class Shift {
     this.queued[item]++;
     if (this.queued[item] === 1) this.cooking[item] = menu[item].seconds;
     this.costs += menu[item].cost;
+    this.workEvents.push({kind:'cook',item});
+    this.moneyEvents.push({amount:-menu[item].cost,item});
     this.say(`เพิ่มคิว${menu[item].name} · กำลังทำและรอ ${this.queued[item]} ชิ้น`);
   }
   add(item: Item) {
@@ -53,6 +61,7 @@ export class Shift {
     if (this.tray.length >= 6) return this.say('ถาดเต็มแล้ว');
     this.stock[item]--;
     this.tray.push(item);
+    this.workEvents.push({kind:'storage',item},{kind:'tray'});
     this.events.push({ type: 'add', item, slot: this.tray.length - 1 });
     this.say(`เพิ่ม${menu[item].name}ลงถาดแล้ว`);
   }
@@ -61,6 +70,7 @@ export class Shift {
       this.stock[item]++;
       this.events.push({ type: 'return', item, slot: this.stock[item] - 1 });
     }
+    if (this.tray.length) this.workEvents.push({kind:'storage'});
     this.tray = [];
     this.say('คืนอาหารจากถาดเข้าตู้แล้ว');
   }
@@ -70,6 +80,8 @@ export class Shift {
     if (!this.trayMatches) return this.say(`อาหารยังไม่ตรงออเดอร์คุณ${c.name} ตรวจถาดก่อนเสิร์ฟ`);
     const tip = c.patience > 30 ? 10 : 0;
     const total = c.items.reduce((sum, i) => sum + menu[i].price, 0) + tip;
+    this.moneyEvents.push({amount:total});
+    this.workEvents.push({kind:'cashier'});
     this.revenue += total; this.served++; this.combo++; this.tray = [];
     this.customers = this.customers.filter(x => x.id !== c.id);
     this.selected = this.customers[0]?.id ?? 0;
