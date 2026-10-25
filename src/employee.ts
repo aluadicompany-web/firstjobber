@@ -11,6 +11,7 @@ export function workPoint(work: Work): Point {
 // Presentation queue only: cooking and finance remain authoritative in Shift.
 export class Employee {
   x = 180; y = 610; moving = false; facing = 1; current: Work | null = null;
+  direction:'front'|'back'|'side'='front';
   jobs: Work[] = []; path: Point[] = []; hold = 0;
   enqueue(work: Work) { this.jobs.push(work); }
   private route(target: Point) {
@@ -24,13 +25,13 @@ export class Employee {
     if (!this.path.length) {
       this.current = this.jobs.shift() ?? null;
       const target = workPoint(this.current ?? {kind:'cashier'});
-      if (Math.hypot(target.x-this.x,target.y-this.y) < 1 && !this.current) { this.moving=false; return; }
+      if (Math.hypot(target.x-this.x,target.y-this.y) < 1 && !this.current) { this.moving=false;this.direction='front'; return; }
       this.route(target);
     }
     let distance = dt * 520;
     while (this.path.length && distance > 0) {
       const target=this.path[0], dx=target.x-this.x, dy=target.y-this.y, length=Math.hypot(dx,dy);
-      if (Math.abs(dx)>.1) this.facing=dx>0?1:-1;
+      if(length>.1){this.direction=Math.abs(dx)>Math.abs(dy)*.8?'side':dy<0?'back':'front';if(Math.abs(dx)>.1)this.facing=dx>0?1:-1;}
       if (length<=distance) { this.x=target.x;this.y=target.y;this.path.shift();distance-=length; }
       else { this.x+=dx/length*distance;this.y+=dy/length*distance;distance=0; }
     }

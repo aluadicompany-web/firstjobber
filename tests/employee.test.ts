@@ -11,3 +11,11 @@ test('employee visits each work point while staying behind the service counter',
 test('pause freezes walking and waiting tasks',()=>{const actor=new Employee();actor.enqueue({kind:'cook',item:'chicken'});actor.tick(.1);const position=[actor.x,actor.y,actor.jobs.length,actor.path.length];actor.tick(10,true);assert.deepEqual([actor.x,actor.y,actor.jobs.length,actor.path.length],position);});
 test('shop clock opens at 10:00, pauses and closes at 22:00',()=>{const g=new Shift(()=>0);assert.equal(g.shopTime,'10:00');g.start();g.tick(45);assert.equal(g.shopTime,'13:00');g.paused=true;g.tick(20);assert.equal(g.shopTime,'13:00');g.paused=false;g.tick(500);assert.equal(g.shopTime,'22:00');assert.equal(g.ended,true);});
 test('money and staff events are emitted once per successful action',()=>{const g=new Shift(()=>0);g.start();g.accept();for(let i=0;i<6;i++)g.cook('chicken');assert.equal(g.moneyEvents.length,5);assert.equal(g.moneyEvents.reduce((n,e)=>n+e.amount,0),-90);assert.equal(g.workEvents.filter(e=>e.kind==='cook').length,5);g.cook('drink');g.tick(5);g.add('chicken');g.add('drink');g.serve();assert.equal(g.moneyEvents.filter(e=>e.amount>0).length,1);assert.equal(g.moneyEvents.at(-1)?.amount,88);assert.equal(g.moneyEvents.reduce((n,e)=>n+e.amount,0),g.profit);g.serve();assert.equal(g.moneyEvents.filter(e=>e.amount>0).length,1);});
+test('employee sprite follows travel direction and returns to a front-facing idle pose',()=>{
+ const actor=new Employee();const until=(check:()=>boolean)=>{for(let i=0;i<300&&!check();i++)actor.tick(.02);assert.ok(check());};
+ actor.enqueue({kind:'cook',item:'chicken'});until(()=>actor.moving&&actor.direction==='front');until(()=>!actor.moving);
+ actor.enqueue({kind:'cashier'});until(()=>actor.moving&&actor.direction==='back');until(()=>!actor.moving);
+ actor.enqueue({kind:'cook',item:'drink'});until(()=>actor.moving&&actor.direction==='side'&&actor.facing===1);until(()=>!actor.moving);
+ actor.enqueue({kind:'cook',item:'chicken'});until(()=>actor.moving&&actor.direction==='side'&&actor.facing===-1);
+ for(let i=0;i<400;i++)actor.tick(.02);assert.equal(actor.direction,'front');assert.equal(actor.x,180);assert.equal(actor.y,610);
+});

@@ -16,6 +16,10 @@ try {
  assert.equal(await page.locator('aside,#orders').count(),0);
  assert.match(await page.locator('.business-hours').innerText(),/10:00.*22:00/);
  assert.equal(await page.locator('#employee').count(),1);
+ assert.equal(await page.locator('#employee .worker-art').count(),1);
+ assert.equal(await page.locator('#employee .chef-hat').count(),0);
+ const proportions=await page.locator('#employee').evaluate(el=>el.getBoundingClientRect().height/document.getElementById('world').getBoundingClientRect().height);
+ assert.ok(proportions>.1&&proportions<.14,'Reference worker must fit the shop scale');
  assert.equal(await page.locator('#world #shop-clock').count(),1);
  const layout=await page.evaluate(()=>({machine:document.querySelector('[data-cook=chicken]').getBoundingClientRect().toJSON(),storage:document.querySelector('.cabinet').getBoundingClientRect().toJSON(),cashier:document.querySelector('#cashier').getBoundingClientRect().toJSON(),tray:document.querySelector('.tray-station').getBoundingClientRect().toJSON()}));
  assert.ok(layout.machine.y>layout.storage.y&&layout.cashier.x<layout.tray.x&&layout.tray.x<layout.storage.x,'Compact register, tray stack and warmer run along the service line');

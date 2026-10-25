@@ -16,7 +16,7 @@ export class Shift {
   private orderBag:number[]=[];
   private lastOrder=-1;
   reactionEvents:ReactionEvent[]=[];
-  remaining = 180; elapsed = 0; spawnIn = 20; nextId = 1;
+  remaining = 180; elapsed = 0; spawnIn = 6; nextId = 1;
   customers: Customer[] = []; selected = 0;
   stock: Record<Item, number> = { chicken: 0, fries: 0, drink: 0 };
   // queued includes the active piece. cooking is the remaining time for that piece only.
@@ -36,10 +36,7 @@ export class Shift {
     return !!this.current?.accepted && [...this.current.items].sort().join() === [...this.tray].sort().join();
   }
   owned(item: Item) { return this.stock[item] + this.queued[item] + this.tray.filter(i => i === item).length; }
-  get arrivalInterval() {
-    const base=this.elapsed<60?20:this.elapsed<120?18:16;
-    return base+(this.customers.length>=2?8:0);
-  }
+  get arrivalInterval() { return this.customers.length>=2?7:6; }
   private refillEmptyShop() {
     if(!this.started||this.paused||this.ended||this.remaining<=0||this.customers.length)return false;
     this.spawn();this.spawnIn=this.arrivalInterval;return this.customers.length>0;
