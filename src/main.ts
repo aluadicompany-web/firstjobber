@@ -3,19 +3,27 @@ import { Shift, menu, items, capacity, type Item, type FoodEvent } from './game'
 import './style.css';
 import { equipmentArt, cashierArt } from './equipment';
 import { Employee } from './employee';
+import { storefrontArt, displayCaseArt, daylight } from './storefront';
 let employee = new Employee();
 let shift = new Shift();
 const $ = (id: string) => document.getElementById(id)!;
-const stationX = [60, 350, 640];
+const stationX = [160, 400, 640];
 const app = document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML = `<header><a class="brand" href="./"><span class="logo">C<span>★</span></span><span>CRISPY SHIFT<small>ร้านเล็ก ๆ ความฝันกรอบ ๆ</small></span></a><span class="edition">FAST FOOD SIMULATOR <b>04</b></span><button id="pause">⏸ หยุดเกม <kbd>Space</kbd></button></header>
-<main><div class="title"><div><span class="eyebrow">YOUR FIRST DAY · กะแรกของคุณ</span><h1>ความอร่อย เริ่มที่มือคุณ<span>✦</span></h1><p>คลิกลูกค้า → เข้าคิวทำอาหาร → หยิบจากตู้ลงถาด → คลิกถาดเสิร์ฟ</p></div><div class="clock"><span>เวลาที่เหลือ</span><strong id="time">03:00</strong><small>เป้าหมาย: 5 ออเดอร์</small></div></div>
-<div class="business-hours"><span class="day-label">DAY 01 · วันนี้</span><span>เปิด <b>10:00</b> — ปิด <b>22:00</b></span><strong id="shop-clock">10:00</strong><span id="shop-state">พร้อมเปิดร้าน</span><span class="hours-progress"><i id="hours-progress"></i></span></div><div class="stats">${[['revenue','รายรับวันนี้'],['costs','วัตถุดิบวันนี้'],['profit','กำไรวันนี้'],['served','เสิร์ฟแล้ว'],['lost','ลูกค้าออกจากร้าน']].map(([id,label])=>`<div><span>${label}</span><strong id="${id}">0</strong></div>`).join('')}</div>
-<section class="restaurant"><div class="section-label"><span><i></i> LIVE KITCHEN</span><span>คลิกทุกอย่างในร้านได้เลย · <span id="count">ลูกค้า 0 / 4</span></span></div><div class="world-scroll"><div id="world"><div id="canvas-layer"></div><div id="customers" class="world-layer"></div><div class="cashier-station" id="cashier" style="left:5%;top:29%;width:23%;height:19%">${cashierArt}<span class="cashier-label">แคชเชียร์ · รับออเดอร์</span></div><div id="employee" role="img" aria-label="พนักงานของเรา รอที่แคชเชียร์"><span class="employee-tag">คุณ · พนักงาน</span><span class="chef-hat"></span><span class="chef-head"><i></i><i></i></span><span class="chef-body"><span></span></span><span class="chef-arm left"></span><span class="chef-arm right"></span><span class="chef-leg left"></span><span class="chef-leg right"></span><span class="chef-shadow"></span></div><span class="zone-label storage-zone">FOOD PICKUP · ตู้กลางร้าน</span><span class="zone-label kitchen-zone">COOKING LINE · ครัวร้อน</span>
-${items.map((item,index)=>`<button class="machine world-button" data-cook="${item}" style="left:${stationX[index]/10}%;top:76%;width:26%;height:20%" aria-label="ทำ${menu[item].name}">${equipmentArt(item)}<span class="machine-top"><strong>${menu[item].icon} ${menu[item].name}</strong><kbd>${index+1}</kbd></span><span class="machine-detail">${menu[item].seconds} วิ/ชิ้น · ต้นทุน ฿${menu[item].cost}</span><span class="machine-bottom"><span class="dial" id="dial-${item}"><span id="timer-${item}">+</span></span><span><b id="queue-${item}">0 / 5</b><small id="status-${item}">คลิกเพิ่มคิว</small></span></span><span class="queue-dots" id="dots-${item}"></span></button>`).join('')}
-<div class="cabinet" style="left:31%;top:49%;width:58%;height:18%"><div class="cabinet-title">ตู้เก็บอาหาร <span>คลิกอาหารเพื่อหยิบลงถาด</span></div><div class="shelves">${items.map(item=>`<div class="shelf" data-shelf="${item}"><div class="shelf-label">${menu[item].name} <b id="stock-${item}">0/5</b></div><div class="slots">${Array.from({length:capacity},(_,slot)=>`<button class="food-slot" data-add="${item}" data-slot="${slot}" aria-label="หยิบ${menu[item].name}ชิ้นที่ ${slot+1}" disabled></button>`).join('')}</div></div>`).join('')}</div></div>
-<div class="tray-station" style="left:76%;top:30%;width:21%;height:20%"><button id="serve" class="serving-tray"><span class="tray-title">ถาดเสิร์ฟ <kbd>Enter</kbd></span><span id="tray-target">เลือกลูกค้าก่อน</span><span id="tray-items"></span><span id="tray-hint">หยิบอาหารจากตู้</span></button><button id="clear">คืนอาหารเข้าตู้ <kbd>⌫</kbd></button></div><div id="food-fx" class="world-layer" aria-hidden="true"></div></div></div><div class="world-caption"><span>อาหารสูงสุดชนิดละ 5 ชิ้น รวมในคิว ตู้ และถาด</span><span>เสิร์ฟเร็ว รับทิปเพิ่ม ฿10</span></div></section>
+app.innerHTML = `<header><a class="brand" href="./"><span class="logo">C<span>★</span></span><span>CRISPY SHIFT<small>ร้านเล็ก ๆ ความฝันกรอบ ๆ</small></span></a><span class="edition">FAST FOOD SIMULATOR <b>05</b></span><button id="pause">⏸ หยุดเกม <kbd>Space</kbd></button></header>
+<main><div class="title"><div><span class="eyebrow">YOUR FIRST DAY · กะแรกของคุณ</span><h1>ความอร่อย เริ่มที่มือคุณ<span>✦</span></h1><p>คลิกลูกค้า → เข้าคิวทำอาหาร → หยิบจากตู้ลงถาด → คลิกถาดเสิร์ฟ</p></div></div>
+<div class="stats">${[['revenue','รายรับวันนี้'],['costs','วัตถุดิบวันนี้'],['profit','กำไรวันนี้'],['served','เสิร์ฟแล้ว'],['lost','ลูกค้าออกจากร้าน']].map(([id,label])=>`<div><span>${label}</span><strong id="${id}">0</strong></div>`).join('')}</div>
+<section class="restaurant"><div class="section-label"><span><i></i> LIVE KITCHEN</span><span>คลิกทุกอย่างในร้านได้เลย · <span id="count">ลูกค้า 0 / 4</span></span></div><div class="world-scroll"><div id="world"><div id="canvas-layer"></div><div class="storefront" aria-label="กระจกหน้าร้าน มองเห็นลานจอดรถ">${storefrontArt}</div><div class="interior-tint"></div><div class="sunbeam"></div><div class="business-hours in-game-clock"><span class="day-label">DAY 01 · วันนี้</span><span>เปิด <b>10:00</b> — ปิด <b>22:00</b></span><strong id="shop-clock">10:00</strong><span id="shop-state">พร้อมเปิดร้าน</span><span class="shift-remaining">เหลือ <b id="time">03:00</b> · เป้าหมาย 5 ออเดอร์</span><span class="hours-progress"><i id="hours-progress"></i></span></div><div id="customers" class="world-layer"></div><div class="cashier-station" id="cashier" style="left:6%;top:45%;width:18%;height:15%">${cashierArt}<span class="cashier-label">แคชเชียร์ · รับออเดอร์</span></div><div id="employee" role="img" aria-label="พนักงานของเรา รอที่แคชเชียร์"><span class="employee-tag">คุณ · พนักงาน</span><span class="chef-hat"></span><span class="chef-head"><i></i><i></i></span><span class="chef-body"><span></span></span><span class="chef-arm left"></span><span class="chef-arm right"></span><span class="chef-leg left"></span><span class="chef-leg right"></span><span class="chef-shadow"></span></div><span class="zone-label storage-zone">HOT HOLDING · ตู้อุ่นอาหาร</span><span class="zone-label kitchen-zone">HOT KITCHEN · ครัวร้อน</span>
+${items.map((item,index)=>`<button class="machine world-button" data-cook="${item}" style="left:${stationX[index]/10}%;top:80.5%;width:17%;height:13.5%" aria-label="ทำ${menu[item].name}">${equipmentArt(item)}<span class="machine-top"><strong>${menu[item].icon} ${menu[item].name}</strong><kbd>${index+1}</kbd></span><span class="machine-detail">${menu[item].seconds} วิ/ชิ้น · ต้นทุน ฿${menu[item].cost}</span><span class="machine-bottom"><span class="dial" id="dial-${item}"><span id="timer-${item}">+</span></span><span><b id="queue-${item}">0 / 5</b><small id="status-${item}">คลิกเพิ่มคิว</small></span></span><span class="queue-dots" id="dots-${item}"></span></button>`).join('')}
+<div class="cabinet" style="left:48%;top:45%;width:41%;height:17%">${displayCaseArt}<div class="cabinet-title">ตู้เก็บอาหาร <span>คลิกอาหารเพื่อหยิบลงถาด</span></div><div class="shelves">${items.map(item=>`<div class="shelf" data-shelf="${item}"><div class="shelf-label">${menu[item].name} <b id="stock-${item}">0/5</b></div><div class="slots">${Array.from({length:capacity},(_,slot)=>`<button class="food-slot" data-add="${item}" data-slot="${slot}" aria-label="หยิบ${menu[item].name}ชิ้นที่ ${slot+1}" disabled></button>`).join('')}</div></div>`).join('')}</div></div>
+<div class="tray-station" style="left:29%;top:49%;width:14%;height:16%"><div class="stacked-trays" aria-hidden="true"><i></i><i></i><i></i><i></i></div><button id="serve" class="serving-tray"><span class="tray-title">ถาดเสิร์ฟ <kbd>Enter</kbd></span><span id="tray-target">เลือกลูกค้าก่อน</span><span id="tray-items"></span><span id="tray-hint">หยิบอาหารจากตู้</span></button><button id="clear">คืนอาหารเข้าตู้ <kbd>⌫</kbd></button></div><div id="food-fx" class="world-layer" aria-hidden="true"></div></div></div><div class="world-caption"><span>อาหารสูงสุดชนิดละ 5 ชิ้น รวมในคิว ตู้ และถาด</span><span>เสิร์ฟเร็ว รับทิปเพิ่ม ฿10</span></div></section>
 <div id="message" role="status" aria-live="polite"></div><details class="help"><summary>วิธีเล่นและปุ่มลัด</summary><p>คลิกตัวลูกค้าเพื่อรับออเดอร์ ชื่อและอาหารอยู่เหนือหัว คลิกสถานีซ้ำเพื่อเข้าคิวทำทีละชิ้น อาหารที่เสร็จจะย้ายไปตู้ คลิกอาหารในตู้เพื่อจัดถาด แล้วคลิกถาดเพื่อเสิร์ฟให้ลูกค้าที่มีกรอบสีส้ม</p><p><kbd>Tab</kbd> เลือกลูกค้าถัดไป <kbd>E</kbd> รับออเดอร์ <kbd>1 2 3</kbd> เพิ่มคิวไก่ / ฟรายส์ / น้ำ <kbd>Q W R</kbd> หยิบลงถาด <kbd>Enter</kbd> เสิร์ฟ <kbd>Backspace</kbd> คืนอาหาร <kbd>Space</kbd> พัก</p></details><footer>CRISPY SHIFT · SMALL KITCHEN. BIG DREAMS.</footer></main><div id="overlay" class="overlay"></div>`;
+function placeClock() {
+  const viewport=document.querySelector<HTMLElement>('.world-scroll')!, clock=document.querySelector<HTMLElement>('.in-game-clock')!;
+  clock.style.left=`${Math.max(8,viewport.scrollLeft+viewport.clientWidth-clock.offsetWidth-12)}px`;clock.style.right='auto';
+}
+document.querySelector('.world-scroll')!.addEventListener('scroll',placeClock);
+window.addEventListener('resize',placeClock);
+placeClock();
 function action(fn: () => void) {
   if (!shift.started || shift.paused || shift.ended) return;
   fn(); render();
@@ -78,6 +86,9 @@ function render() {
   const taskNames={cashier:'รอรับออเดอร์',cook:'ไปสถานีทำอาหาร',storage:'หยิบอาหารจากตู้',tray:'จัดถาดเสิร์ฟ'};
   actor.dataset.task=employee.current?.kind??'cashier';actor.dataset.moving=String(employee.moving);
   actor.setAttribute('aria-label',`พนักงานของเรา ${taskNames[employee.current?.kind??'cashier']}`);
+  const light=daylight(shift.shopMinutes), world=$('world');
+  world.style.setProperty('--sky-color',light.sky);world.style.setProperty('--night-level',String(light.night));world.style.setProperty('--dusk-level',String(light.dusk));world.style.setProperty('--sun-shift',`${light.sunShift}px`);
+  world.dataset.lighting=light.night>=.7?'night':light.dusk>.45?'sunset':'day';
   $('shop-clock').textContent=shift.shopTime;
   $('shop-state').textContent=shift.ended?'ปิดร้านแล้ว':!shift.started?'พร้อมเปิดร้าน':shift.paused?'พักเกม':'เปิดให้บริการ';
   $('hours-progress').style.width=`${(180-shift.remaining)/180*100}%`;
@@ -95,7 +106,7 @@ function render() {
     let button = document.querySelector<HTMLButtonElement>(`[data-customer="${c.id}"]`);
     if (!button) { button=document.createElement('button');button.dataset.customer=String(c.id);button.innerHTML=`<span class="bubble"><span class="customer-name">#${c.id} คุณ${c.name}<span class="accepted-badge">✓</span></span><span class="requested-food">${c.items.map(item=>`<span title="${menu[item].name}">${menu[item].icon}</span>`).join('')}</span><span class="customer-status"></span><span class="patience"><i></i></span></span><span class="person"><span class="head">••<span>⌣</span></span><span class="body"></span><span class="feet"></span></span>`; $('customers').append(button); }
     button.className=`customer ${shift.selected===c.id?'selected':''} ${c.accepted?'accepted':''}`;
-    button.style.left=`${9+index*22}%`;
+    button.style.left=`${7+index*22}%`;
     button.setAttribute('aria-label',`คุณ${c.name} ต้องการ ${c.items.map(i=>menu[i].name).join(' และ ')} ${c.accepted?'รับออเดอร์แล้ว':'คลิกเพื่อรับออเดอร์'}`);
     button.querySelector('.customer-status')!.textContent=`${c.accepted?'รับแล้ว':'คลิกรับ'} · ${Math.ceil(c.patience)} วิ`;
     const bar=button.querySelector<HTMLElement>('.patience i')!;bar.style.width=`${Math.max(0,c.patience/c.maxPatience*100)}%`;bar.style.background=c.patience<15?'#ce624a':'#82a578';
@@ -136,20 +147,15 @@ class Kitchen extends Phaser.Scene {
   create(){this.g=this.add.graphics();this.game.canvas.setAttribute('aria-hidden','true');this.draw();}
   update(time:number,delta:number){const dt=Math.min(delta/1000,.25);shift.tick(dt);employee.tick(dt,shift.paused||shift.ended||!shift.started);if(time-this.lastRender>80){render();this.lastRender=time;}}
   draw(){const g=this.g;const rect=(x:number,y:number,w:number,h:number,c:number,r=0)=>{g.fillStyle(c);r?g.fillRoundedRect(x,y,w,h,r):g.fillRect(x,y,w,h);};
-    // Layered top surfaces, side faces and cast shadows create depth without a 3D runtime.
-    rect(0,0,1000,900,0xe9e5e3);
-    for(let y=64;y<900;y+=40)for(let x=0;x<1000;x+=40){rect(x,y,39,39,(x/40+Math.floor(y/40))%2===0?0xf8f6f2:0xdedbd8);}
-    rect(0,0,1000,65,0x9e1d2a);rect(0,0,1000,48,0xd3353d);rect(0,48,1000,10,0xf7f5ee);rect(0,58,1000,7,0x25262c);
-    for(let x=18;x<1000;x+=70){rect(x,1,27,43,0xe44a4f);}
-    const sign=this.add.text(500,25,'C R I S P Y   C O R N E R',{fontFamily:'Georgia',fontSize:'23px',color:'#fff9ee'});sign.setOrigin(.5);sign.setShadow(0,2,'#881b26',2);
-    // The service counter has a white top, dark edge and a red cabinet front.
-    rect(32,263,940,45,0xb6b0ac,10);rect(25,257,950,43,0x981d29,8);rect(25,245,950,28,0xf9f8f3,8);rect(25,269,950,8,0x313138);
-    for(let x=43;x<950;x+=116){rect(x,281,96,13,0xc8333d,2);rect(x+35,281,28,2,0xf1b3ac);}
-    // Central island, walking aisle and the lower stainless cooking line.
-    rect(316,466,584,161,0xb6afac,10);rect(305,449,590,162,0x8f2731,8);rect(300,440,590,160,0xf6f4ed,8);rect(300,594,590,12,0x34343b,3);
-    rect(42,733,928,140,0xb0a8a4,10);rect(30,718,940,145,0x8b8e91,7);rect(30,710,940,140,0xf6f4ed,7);rect(30,850,940,15,0xa72532,3);rect(48,864,20,15,0x303138,3);rect(932,864,20,15,0x303138,3);
-    for(let x=95;x<960;x+=290){rect(x,693,188,5,0x97948f,2);}
-    for(const x of [21,953]){rect(x+5,111,27,84,0xb7afaa,8);rect(x,100,27,79,0xb82130,8);rect(x,96,27,18,0xf9f5ee,4);rect(x+5,118,17,34,0xf0e7db,4);}
+    // A compact service line and an open staff aisle, scaled around the chef.
+    rect(0,0,1000,900,0xe9e6e0);
+    for(let y=240;y<900;y+=40)for(let x=0;x<1000;x+=40)rect(x,y,39,39,(x/40+y/40)%2===0?0xf2efe8:0xe0dcd5);
+    rect(0,244,1000,8,0x878c8c);rect(0,251,1000,6,0xc0c1b9);
+    rect(39,482,903,61,0xb1aaa4,8);rect(30,474,910,62,0x9e2531,7);rect(30,465,910,49,0xf4f1e9,6);rect(30,510,910,8,0x30343a);
+    for(let x=48;x<930;x+=105){rect(x,521,86,9,0xc4424b,2);}
+    // The smaller commercial hot line occupies the back of the working aisle.
+    rect(141,793,724,64,0xa39e98,6);rect(130,784,730,64,0xb7bdbd,5);rect(130,778,730,58,0xe7e8e2,5);rect(130,836,730,12,0xa62c37,3);rect(148,847,17,16,0x383b41,2);rect(828,847,17,16,0x383b41,2);
+    rect(126,758,738,8,0xc5c8c2,2);rect(126,765,738,5,0x8d989a,2);
 
   }
 }

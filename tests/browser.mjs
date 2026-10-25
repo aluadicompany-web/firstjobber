@@ -16,8 +16,9 @@ try {
  assert.equal(await page.locator('aside,#orders').count(),0);
  assert.match(await page.locator('.business-hours').innerText(),/10:00.*22:00/);
  assert.equal(await page.locator('#employee').count(),1);
- const layout=await page.evaluate(()=>({machine:document.querySelector('[data-cook=chicken]').getBoundingClientRect().top,storage:document.querySelector('.cabinet').getBoundingClientRect().top,cashier:document.querySelector('#cashier').getBoundingClientRect().top}));
- assert.ok(layout.machine>layout.storage&&layout.storage>layout.cashier,'Stations below central cabinet and register');
+ assert.equal(await page.locator('#world #shop-clock').count(),1);
+ const layout=await page.evaluate(()=>({machine:document.querySelector('[data-cook=chicken]').getBoundingClientRect().toJSON(),storage:document.querySelector('.cabinet').getBoundingClientRect().toJSON(),cashier:document.querySelector('#cashier').getBoundingClientRect().toJSON(),tray:document.querySelector('.tray-station').getBoundingClientRect().toJSON()}));
+ assert.ok(layout.machine.y>layout.storage.y&&layout.cashier.x<layout.tray.x&&layout.tray.x<layout.storage.x,'Compact register, tray stack and warmer run along the service line');
  assert.match(await customer(1).innerText(),/คุณมิน/);
  await customer(1).locator('.person').click();assert.match(await customer(1).getAttribute('aria-label'),/รับออเดอร์แล้ว/);
  await customer(1).click();assert.equal(await page.locator('#revenue').innerText(),'฿0');
@@ -66,7 +67,10 @@ try {
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  assert.deepEqual(errors,[]);console.log('PASS: mobile scrollable scene, customer/station/cabinet/tray clicks, no page errors');
  if(!process.argv.includes('--orders')&&!process.argv.includes('--kitchen')) {
-  console.log('Waiting for real shift end...');await page.waitForFunction(()=>document.getElementById('overlay').dataset.mode==='end',null,{timeout:210000});
+  console.log('Waiting for sunset, night and shift end...');
+  await page.waitForFunction(()=>document.getElementById('world').dataset.lighting==='sunset',null,{timeout:160000});await capture('artifacts/storefront-sunset.png');
+  await page.waitForFunction(()=>document.getElementById('world').dataset.lighting==='night',null,{timeout:90000});await capture('artifacts/storefront-night.png');
+  assert.ok(Number(await page.locator('#world').evaluate(el=>el.style.getPropertyValue('--night-level')))>=.7);await page.waitForFunction(()=>document.getElementById('overlay').dataset.mode==='end',null,{timeout:210000});
   assert.equal(await page.locator('#shop-clock').innerText(),'22:00');assert.match(await page.locator('#summary-revenue').innerText(),/฿88/);assert.equal(await page.locator('#summary-profit').innerText(),await page.locator('#profit').innerText());await capture('artifacts/day-summary.png');
   await page.locator('#restart').click();assert.match(await page.locator('#served').innerText(),/^0 /);assert.equal(await page.locator('#stock-chicken').innerText(),'0/5');assert.equal(await page.locator('#queue-chicken').innerText(),'คิว 0 / 5');assert.equal(await page.locator('#costs').innerText(),'฿0');assert.deepEqual(errors,[]);console.log('PASS: shift end and clean restart');
  }
