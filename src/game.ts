@@ -16,7 +16,7 @@ export class Shift {
   private orderBag:number[]=[];
   private lastOrder=-1;
   reactionEvents:ReactionEvent[]=[];
-  remaining = 180; elapsed = 0; spawnIn = 8; nextId = 1;
+  remaining = 180; elapsed = 0; spawnIn = 20; nextId = 1;
   customers: Customer[] = []; selected = 0;
   stock: Record<Item, number> = { chicken: 0, fries: 0, drink: 0 };
   // queued includes the active piece. cooking is the remaining time for that piece only.
@@ -36,7 +36,15 @@ export class Shift {
     return !!this.current?.accepted && [...this.current.items].sort().join() === [...this.tray].sort().join();
   }
   owned(item: Item) { return this.stock[item] + this.queued[item] + this.tray.filter(i => i === item).length; }
-  start() { this.started = true; this.spawn(); this.say('ดูชื่อและอาหารเหนือหัว แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์'); }
+  get arrivalInterval() {
+    const base=this.elapsed<60?20:this.elapsed<120?18:16;
+    return base+(this.customers.length>=2?8:0);
+  }
+  private refillEmptyShop() {
+    if(!this.started||this.paused||this.ended||this.remaining<=0||this.customers.length)return false;
+    this.spawn();this.spawnIn=this.arrivalInterval;return this.customers.length>0;
+  }
+  start() { this.started = true; this.spawnIn=this.arrivalInterval; this.spawn(); this.say('ดูชื่อและอาหารเหนือหัว แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์'); }
   spawn() {
     if (this.customers.length >= 4) return;
     if (!this.orderBag.length) this.orderBag=orderTemplates.map((_,index)=>index);
@@ -103,6 +111,7 @@ export class Shift {
     this.revenue += total; this.served++; this.combo++; this.tray = [];
     this.customers = this.customers.filter(x => x.id !== c.id);
     this.selected = this.customers[0]?.id ?? 0;
+    this.refillEmptyShop();
     this.say(`เสิร์ฟให้คุณ${c.name}สำเร็จ! +฿${total}${tip ? ' รวมทิป ฿10' : ''}`);
   }
   tick(dt: number) {
@@ -128,7 +137,8 @@ export class Shift {
       this.say('ลูกค้ารอนานเกินไปและออกจากร้านแล้ว');
     }
     this.spawnIn -= dt;
-    if (this.spawnIn <= 0) { this.spawn(); this.spawnIn = Math.max(7, 13 - this.elapsed / 30); }
-    if (this.remaining <= 0) { this.ended = true; this.say('หมดเวลากะแล้ว'); }
+    if (this.remaining <= 0) { this.ended = true; this.say('หมดเวลากะแล้ว'); return; }
+    if (this.refillEmptyShop()) return;
+    if (this.spawnIn <= 0) { this.spawn(); this.spawnIn = this.arrivalInterval; }
   }
 }

@@ -59,10 +59,10 @@ try {
  assert.match(await page.locator('#served').innerText(),/^1 /);
  assert.equal(await page.locator('#profit').innerText(),`฿${expectedRevenue-expectedCosts}`);
  assert.equal(await page.locator('.money-popup.income').innerText(),`+฿${expectedRevenue}`);
- assert.equal(await page.locator('.customer-reaction.happy').count(),1);assert.equal(await customer(1).count(),0);
+ assert.equal(await page.locator('.customer-reaction.happy').count(),1);assert.equal(await customer(1).count(),0);assert.ok(await page.locator('[data-customer]').count()>=1,'Empty shop must refill immediately');
  await page.waitForTimeout(300);await capture('artifacts/reaction-happy.png');
  console.log('PASS: named overhead orders, no sidebar, click queue, sequential cooking, paused cooldown, physical stock, wrong tray rejection, click-to-serve');
- if(process.argv.includes('--orders')) { await customer(4).waitFor({timeout:45000});const keys=await page.locator('[data-customer]').evaluateAll(nodes=>nodes.map(el=>el.dataset.orderItems.split(',').sort().join(',')));assert.equal(new Set(keys).size,keys.length);await customer(3).click();assert.match(await customer(3).getAttribute('aria-label'),/รับออเดอร์แล้ว/);await customer(4).locator('.bubble').click();assert.match(await customer(4).getAttribute('aria-label'),/รับออเดอร์แล้ว/); }
+ if(process.argv.includes('--orders')) { await customer(4).waitFor({timeout:65000});const keys=await page.locator('[data-customer]').evaluateAll(nodes=>nodes.map(el=>el.dataset.orderItems.split(',').sort().join(',')));assert.equal(new Set(keys).size,keys.length);await customer(3).click();assert.match(await customer(3).getAttribute('aria-label'),/รับออเดอร์แล้ว/);await customer(4).locator('.bubble').click();assert.match(await customer(4).getAttribute('aria-label'),/รับออเดอร์แล้ว/); }
  else {
   // Capacity rejection cannot charge a sixth piece; slots are exact, not decorative counters.
   for(let i=0;i<5;i++)await cook('fries').click();const cost=await page.locator('#costs').innerText();await cook('fries').click();assert.equal(await page.locator('#costs').innerText(),cost);assert.match(await page.locator('#message').innerText(),/ครบ 5 ชิ้น/);
