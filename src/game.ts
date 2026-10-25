@@ -11,7 +11,7 @@ export class Shift {
  constructor(public random= Math.random){}
  get current(){return this.customers.find(c=>c.id===this.selected)}
  get profit(){return this.revenue-this.costs}
- start(){this.started=true;this.spawn();this.message='คลิกลูกค้า แล้วกด E เพื่อรับออเดอร์'}
+ start(){this.started=true;this.spawn();this.message='ดูอาหารเหนือหัว แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์ หรือกด E'}
  spawn(){if(this.customers.length>=4)return;const n=this.nextId++;const sets:Item[][]=[['chicken','drink'],['chicken','fries'],['chicken'],['chicken','fries','drink'],['fries','drink']]; const items=sets[(n-1)%sets.length].slice();this.customers.push({id:n,name:['มิน','เจ','พลอย','ต้น','ฟ้า'][(n-1)%5],items,patience:55,maxPatience:55,accepted:false});if(!this.current)this.selected=n;}
  select(id:number){if(this.customers.some(c=>c.id===id))this.selected=id}
  accept(){const c=this.current;if(!c)return this.say('ยังไม่มีลูกค้าในคิว');c.accepted=true;this.say(`รับออเดอร์ #${c.id} แล้ว เตรียมอาหารได้เลย`)}
