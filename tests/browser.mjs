@@ -29,7 +29,7 @@ try {
  assert.ok(await page.locator('.money-popup.expense').count()>0);
  await page.waitForFunction(()=>document.getElementById('employee').dataset.moving==='true');
  assert.equal(await oilState(),'running');
- const oilMotion=()=>page.locator('[data-cook=chicken] .oil-surface').evaluate(el=>getComputedStyle(el).transform);
+ const oilMotion=()=>page.locator('[data-cook=chicken] .oil-surface').evaluateAll(els=>JSON.stringify(els.map(el=>getComputedStyle(el).transform)));
  const beforeStaff=await page.locator('#employee').getAttribute('style');const beforeOil=await oilMotion();await page.waitForTimeout(150);assert.notEqual(await oilMotion(),beforeOil,'Oil should visibly move while cooking');
  assert.notEqual(await page.locator('#employee').getAttribute('style'),beforeStaff,'Employee should walk toward work');
  assert.equal(await page.locator('[data-cook=drink] .soda-stream').evaluate(el=>getComputedStyle(el).animationPlayState),'running');

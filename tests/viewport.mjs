@@ -11,11 +11,12 @@ try {
   await page.setViewportSize(viewport);await page.waitForTimeout(200);
   const result=await page.evaluate(()=>{
    const world=document.getElementById('world').getBoundingClientRect(),host=document.querySelector('.world-scroll').getBoundingClientRect();
-   return {world:world.toJSON(),host:host.toJSON(),scrollX:document.documentElement.scrollWidth-innerWidth,scrollY:document.documentElement.scrollHeight-innerHeight,targets:[...document.querySelectorAll('[data-cook],.cabinet,#serve,#cashier,#shop-clock')].map(el=>el.getBoundingClientRect().toJSON())};
+   return {world:world.toJSON(),host:host.toJSON(),scrollX:document.documentElement.scrollWidth-innerWidth,scrollY:document.documentElement.scrollHeight-innerHeight,targets:[...document.querySelectorAll('[data-cook],.cabinet,#serve,#cashier,#shop-clock')].map(el=>el.getBoundingClientRect().toJSON()),stations:[...document.querySelectorAll('[data-cook]')].map(el=>el.getBoundingClientRect().toJSON())};
   });
   assert.ok(result.world.left>=result.host.left-1&&result.world.right<=result.host.right+1,`Scene width at ${viewport.width}x${viewport.height}`);
   assert.ok(result.world.top>=result.host.top-1&&result.world.bottom<=result.host.bottom+1,`Scene height at ${viewport.width}x${viewport.height}`);
   assert.ok(result.scrollX<=1&&result.scrollY<=1,'No page scrolling');
+  for(const box of result.stations)assert.ok(Math.abs(box.bottom-result.world.bottom)<1.5&&Math.abs(box.bottom-result.host.bottom)<1.5,'Cooking machines must touch the lower scene edge');
   for(const box of result.targets)assert.ok(box.left>=0&&box.top>=0&&box.right<=viewport.width+1&&box.bottom<=viewport.height+1,`Every workstation stays on screen at ${viewport.width}x${viewport.height}: ${JSON.stringify(box)}`);
   await page.screenshot({path:`artifacts/fit-${viewport.width}x${viewport.height}.png`});
   console.log(`PASS: whole shop and controls visible at ${viewport.width}x${viewport.height}`);

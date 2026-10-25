@@ -1,12 +1,12 @@
 import type { Item } from './game';
 export type Work = { kind: 'cashier' | 'cook' | 'storage' | 'tray'; item?: Item };
 export type Point = { x: number; y: number };
-const columns: Record<Item, number> = { chicken: 245, fries: 485, drink: 725 };
+const columns: Record<Item, number> = { chicken: 180, fries: 480, drink: 855 };
 export function workPoint(work: Work): Point {
   if (work.kind === 'cashier') return { x: 180, y: 610 };
   if (work.kind === 'tray') return { x: 365, y: 610 };
   if (work.kind === 'storage') return { x: { chicken: 550, fries: 680, drink: 810 }[work.item ?? 'chicken'], y: 610 };
-  return { x: columns[work.item ?? 'chicken'], y: 705 };
+  return { x: columns[work.item ?? 'chicken'], y: 660 };
 }
 // Presentation queue only: cooking and finance remain authoritative in Shift.
 export class Employee {
