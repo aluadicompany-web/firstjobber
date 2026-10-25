@@ -1,17 +1,18 @@
 import Phaser from 'phaser';
 import { Shift, menu, items, capacity, type Item, type FoodEvent } from './game';
 import './style.css';
+import { equipmentArt } from './equipment';
 let shift = new Shift();
 const $ = (id: string) => document.getElementById(id)!;
 const stationX = [60, 350, 640];
 const app = document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML = `<header><a class="brand" href="./"><span class="logo">C<span>★</span></span><span>CRISPY SHIFT<small>ร้านเล็ก ๆ ความฝันกรอบ ๆ</small></span></a><span class="edition">FAST FOOD SIMULATOR <b>02</b></span><button id="pause">พักเกม <kbd>Space</kbd></button></header>
-<main><div class="title"><div><span class="eyebrow">YOUR FIRST DAY · กะแรกของคุณ</span><h1>ความอร่อย เริ่มที่มือคุณ<span>✳</span></h1><p>คลิกลูกค้า → เข้าคิวทำอาหาร → หยิบจากตู้ลงถาด → คลิกถาดเสิร์ฟ</p></div><div class="clock"><span>เวลาที่เหลือ</span><strong id="time">03:00</strong><small>เป้าหมาย: 5 ออเดอร์</small></div></div>
+app.innerHTML = `<header><a class="brand" href="./"><span class="logo">C<span>★</span></span><span>CRISPY SHIFT<small>ร้านเล็ก ๆ ความฝันกรอบ ๆ</small></span></a><span class="edition">FAST FOOD SIMULATOR <b>03</b></span><button id="pause">พักเกม <kbd>Space</kbd></button></header>
+<main><div class="title"><div><span class="eyebrow">YOUR FIRST DAY · กะแรกของคุณ</span><h1>ความอร่อย เริ่มที่มือคุณ<span>✦</span></h1><p>คลิกลูกค้า → เข้าคิวทำอาหาร → หยิบจากตู้ลงถาด → คลิกถาดเสิร์ฟ</p></div><div class="clock"><span>เวลาที่เหลือ</span><strong id="time">03:00</strong><small>เป้าหมาย: 5 ออเดอร์</small></div></div>
 <div class="stats">${[['revenue','รายรับ'],['costs','ต้นทุนวัตถุดิบ'],['profit','กำไรสุทธิ'],['served','เสิร์ฟแล้ว'],['lost','ลูกค้าออกจากร้าน']].map(([id,label])=>`<div><span>${label}</span><strong id="${id}">0</strong></div>`).join('')}</div>
 <section class="restaurant"><div class="section-label"><span><i></i> LIVE KITCHEN</span><span>คลิกทุกอย่างในร้านได้เลย · <span id="count">ลูกค้า 0 / 4</span></span></div><div class="world-scroll"><div id="world"><div id="canvas-layer"></div><div id="customers" class="world-layer"></div>
-${items.map((item,index)=>`<button class="machine world-button" data-cook="${item}" style="left:${stationX[index]/10}%;top:44.44%;width:26%;height:18.05%" aria-label="ทำ${menu[item].name}"><span class="machine-top"><strong>${menu[item].icon} ${menu[item].name}</strong><kbd>${index+1}</kbd></span><span class="machine-detail">${menu[item].seconds} วิ/ชิ้น · ต้นทุน ฿${menu[item].cost}</span><span class="machine-bottom"><span class="dial" id="dial-${item}"><span id="timer-${item}">+</span></span><span><b id="queue-${item}">0 / 5</b><small id="status-${item}">คลิกเพิ่มคิว</small></span></span><span class="queue-dots" id="dots-${item}"></span></button>`).join('')}
-<div class="cabinet" style="left:6%;top:67.36%;width:57%;height:21.5%"><div class="cabinet-title">ตู้เก็บอาหาร <span>คลิกอาหารเพื่อหยิบลงถาด</span></div><div class="shelves">${items.map(item=>`<div class="shelf" data-shelf="${item}"><div class="shelf-label">${menu[item].name} <b id="stock-${item}">0/5</b></div><div class="slots">${Array.from({length:capacity},(_,slot)=>`<button class="food-slot" data-add="${item}" data-slot="${slot}" aria-label="หยิบ${menu[item].name}ชิ้นที่ ${slot+1}" disabled></button>`).join('')}</div></div>`).join('')}</div></div>
-<div class="tray-station" style="left:67%;top:67.36%;width:27%;height:23.5%"><button id="serve" class="serving-tray"><span class="tray-title">ถาดเสิร์ฟ <kbd>Enter</kbd></span><span id="tray-target">เลือกลูกค้าก่อน</span><span id="tray-items"></span><span id="tray-hint">หยิบอาหารจากตู้</span></button><button id="clear">คืนอาหารเข้าตู้ <kbd>⌫</kbd></button></div><div id="food-fx" class="world-layer" aria-hidden="true"></div></div></div><div class="world-caption"><span>อาหารสูงสุดชนิดละ 5 ชิ้น รวมในคิว ตู้ และถาด</span><span>เสิร์ฟเร็ว รับทิปเพิ่ม ฿10</span></div></section>
+${items.map((item,index)=>`<button class="machine world-button" data-cook="${item}" style="left:${stationX[index]/10}%;top:41.67%;width:26%;height:25%" aria-label="ทำ${menu[item].name}">${equipmentArt(item)}<span class="machine-top"><strong>${menu[item].icon} ${menu[item].name}</strong><kbd>${index+1}</kbd></span><span class="machine-detail">${menu[item].seconds} วิ/ชิ้น · ต้นทุน ฿${menu[item].cost}</span><span class="machine-bottom"><span class="dial" id="dial-${item}"><span id="timer-${item}">+</span></span><span><b id="queue-${item}">0 / 5</b><small id="status-${item}">คลิกเพิ่มคิว</small></span></span><span class="queue-dots" id="dots-${item}"></span></button>`).join('')}
+<div class="cabinet" style="left:6%;top:70%;width:57%;height:23%"><div class="cabinet-title">ตู้เก็บอาหาร <span>คลิกอาหารเพื่อหยิบลงถาด</span></div><div class="shelves">${items.map(item=>`<div class="shelf" data-shelf="${item}"><div class="shelf-label">${menu[item].name} <b id="stock-${item}">0/5</b></div><div class="slots">${Array.from({length:capacity},(_,slot)=>`<button class="food-slot" data-add="${item}" data-slot="${slot}" aria-label="หยิบ${menu[item].name}ชิ้นที่ ${slot+1}" disabled></button>`).join('')}</div></div>`).join('')}</div></div>
+<div class="tray-station" style="left:67%;top:70%;width:27%;height:23.5%"><button id="serve" class="serving-tray"><span class="tray-title">ถาดเสิร์ฟ <kbd>Enter</kbd></span><span id="tray-target">เลือกลูกค้าก่อน</span><span id="tray-items"></span><span id="tray-hint">หยิบอาหารจากตู้</span></button><button id="clear">คืนอาหารเข้าตู้ <kbd>⌫</kbd></button></div><div id="food-fx" class="world-layer" aria-hidden="true"></div></div></div><div class="world-caption"><span>อาหารสูงสุดชนิดละ 5 ชิ้น รวมในคิว ตู้ และถาด</span><span>เสิร์ฟเร็ว รับทิปเพิ่ม ฿10</span></div></section>
 <div id="message" role="status" aria-live="polite"></div><details class="help"><summary>วิธีเล่นและปุ่มลัด</summary><p>คลิกตัวลูกค้าเพื่อรับออเดอร์ ชื่อและอาหารอยู่เหนือหัว คลิกสถานีซ้ำเพื่อเข้าคิวทำทีละชิ้น อาหารที่เสร็จจะย้ายไปตู้ คลิกอาหารในตู้เพื่อจัดถาด แล้วคลิกถาดเพื่อเสิร์ฟให้ลูกค้าที่มีกรอบสีส้ม</p><p><kbd>Tab</kbd> เลือกลูกค้าถัดไป <kbd>E</kbd> รับออเดอร์ <kbd>1 2 3</kbd> เพิ่มคิวไก่ / ฟรายส์ / น้ำ <kbd>Q W R</kbd> หยิบลงถาด <kbd>Enter</kbd> เสิร์ฟ <kbd>Backspace</kbd> คืนอาหาร <kbd>Space</kbd> พัก</p></details><footer>CRISPY SHIFT · SMALL KITCHEN. BIG DREAMS.</footer></main><div id="overlay" class="overlay"></div>`;
 function action(fn: () => void) {
   if (!shift.started || shift.paused || shift.ended) return;
@@ -57,6 +58,7 @@ function fly(event: FoodEvent) {
   icon.animate([{transform:'translate(-50%,-50%) scale(.8)',opacity:1},{transform:`translate(calc(-50% + ${dx*.5}px),calc(-50% + ${dy*.5-35}px)) scale(1.25)`,opacity:1},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.8)`,opacity:.3}],{duration,easing:'ease-in-out'}).onfinish=()=>icon.remove();
 }
 function render() {
+  $('world').classList.toggle('simulation-paused', shift.paused || shift.ended || !shift.started);
   const seconds = Math.ceil(shift.remaining);
   $('time').textContent = `${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;
   for (const [id, value] of Object.entries({revenue:`฿${shift.revenue}`,costs:`฿${shift.costs}`,profit:`฿${shift.profit}`,served:`${shift.served} ออเดอร์`,lost:String(shift.lost)})) $(id).textContent=value;
@@ -107,14 +109,19 @@ class Kitchen extends Phaser.Scene {
   create(){this.g=this.add.graphics();this.game.canvas.setAttribute('aria-hidden','true');this.draw();}
   update(time:number,delta:number){shift.tick(Math.min(delta/1000,.25));if(time-this.lastRender>80){render();this.lastRender=time;}}
   draw(){const g=this.g;const rect=(x:number,y:number,w:number,h:number,c:number,r=0)=>{g.fillStyle(c);r?g.fillRoundedRect(x,y,w,h,r):g.fillRect(x,y,w,h);};
-    rect(0,0,1000,720,0xf0e6d1);
-    for(let y=0;y<720;y+=40)for(let x=0;x<1000;x+=40)if((x/40+y/40)%2===0)rect(x,y,39,39,0xe5dbc5);
-    rect(0,0,1000,56,0x244e42);rect(0,56,1000,9,0xd5a267);
-    const sign=this.add.text(500,26,'C R I S P Y   C O R N E R',{fontFamily:'Georgia',fontSize:'23px',color:'#f9d59a'});sign.setOrigin(.5);
-    rect(25,252,950,40,0x8a6144,8);rect(25,245,950,29,0xd9a36e,8);rect(35,282,930,27,0x365f4b);
-    for(let x=50;x<950;x+=110)rect(x,286,90,16,0x47745c,3);
-    rect(30,461,940,225,0xa7a38d,10);rect(30,456,940,219,0xd5d1bb,10);
-    for(const x of [25,950]){rect(x,96,25,90,0xb4845b,8);g.fillStyle(0x6e9165);g.fillCircle(x+13,104,21);g.fillCircle(x+5,88,17);g.fillCircle(x+23,88,17);}
+    // Layered top surfaces, side faces and cast shadows create depth without a 3D runtime.
+    rect(0,0,1000,720,0xe9e5e3);
+    for(let y=64;y<720;y+=40)for(let x=0;x<1000;x+=40){rect(x,y,39,39,(x/40+Math.floor(y/40))%2===0?0xf8f6f2:0xdedbd8);}
+    rect(0,0,1000,65,0x9e1d2a);rect(0,0,1000,48,0xd3353d);rect(0,48,1000,10,0xf7f5ee);rect(0,58,1000,7,0x25262c);
+    for(let x=18;x<1000;x+=70){rect(x,1,27,43,0xe44a4f);}
+    const sign=this.add.text(500,25,'C R I S P Y   C O R N E R',{fontFamily:'Georgia',fontSize:'23px',color:'#fff9ee'});sign.setOrigin(.5);sign.setShadow(0,2,'#881b26',2);
+    // The service counter has a white top, dark edge and a red cabinet front.
+    rect(32,263,940,45,0xb6b0ac,10);rect(25,257,950,43,0x981d29,8);rect(25,245,950,28,0xf9f8f3,8);rect(25,269,950,8,0x313138);
+    for(let x=43;x<950;x+=116){rect(x,281,96,13,0xc8333d,2);rect(x+35,281,28,2,0xf1b3ac);}
+    // Stainless prep table, shaded side, red kick plate and feet.
+    rect(39,495,932,193,0xb5afaa,12);rect(30,485,940,193,0x74777b,8);rect(30,478,940,188,0xf4f1eb,8);rect(30,661,940,13,0x25272d,3);rect(45,674,22,17,0x3f4146,3);rect(933,674,22,17,0x3f4146,3);
+    for(const x of [21,953]){rect(x+5,111,27,84,0xb7afaa,8);rect(x,100,27,79,0xb82130,8);rect(x,96,27,18,0xf9f5ee,4);rect(x+5,118,17,34,0xf0e7db,4);}
+
   }
 }
 new Phaser.Game({type:Phaser.CANVAS,parent:'canvas-layer',width:1000,height:720,backgroundColor:'#f0e6d1',fps:{target:30,smoothStep:false},scene:Kitchen,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},audio:{noAudio:true}});
