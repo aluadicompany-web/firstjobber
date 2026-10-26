@@ -24,9 +24,10 @@ try {
  const layout=await page.evaluate(()=>({machine:document.querySelector('[data-cook=chicken]').getBoundingClientRect().toJSON(),storage:document.querySelector('.cabinet').getBoundingClientRect().toJSON(),cashier:document.querySelector('#cashier').getBoundingClientRect().toJSON(),tray:document.querySelector('.tray-station').getBoundingClientRect().toJSON()}));
  assert.ok(layout.machine.y>layout.storage.y&&layout.cashier.x<layout.tray.x&&layout.tray.x<layout.storage.x,'Compact register, tray stack and warmer run along the service line');
  assert.match(await customer(1).innerText(),/คุณ.+/);
+ await customer(1).locator('.person').click();
  const recipe=(await customer(1).getAttribute('data-order-items')).split(',');
  const prices={chicken:59,fries:29,drink:19};
- const expectedRevenue=recipe.reduce((sum,item)=>sum+prices[item],10);
+ const expectedRevenue=Math.round(recipe.reduce((sum,item)=>sum+prices[item],0)*1.1*100)/100;
  const expectedCosts=40+(recipe.includes('fries')?8:0);
  await customer(1).locator('.person').click();assert.match(await customer(1).getAttribute('aria-label'),/รับออเดอร์แล้ว/);
  await customer(1).click();assert.equal(await page.locator('#revenue').innerText(),'฿0');

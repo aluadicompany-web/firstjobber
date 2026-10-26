@@ -5,7 +5,7 @@ await fs.mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
 try {
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:5173');await page.locator('#start').click();
+ await page.addInitScript(()=>{Math.random=()=>0});await page.goto('http://127.0.0.1:5173');await page.locator('#start').click();
  const sizes=[{width:1366,height:768},{width:1280,height:720},{width:1440,height:900},{width:1024,height:768},{width:390,height:844},{width:844,height:390}];
  for(const viewport of sizes){
   await page.setViewportSize(viewport);await page.waitForTimeout(200);
@@ -28,7 +28,7 @@ try {
  for(const item of recipe)await page.locator(`[data-cook="${item}"]`).click();
  for(const item of recipe){await page.waitForFunction(item=>document.getElementById(`stock-${item}`).textContent==='1/5',item);await page.locator(`[data-add="${item}"]:not(:disabled)`).first().click();}
  const trayBox=await page.locator('.tray-station').boundingBox();await page.mouse.click(trayBox.x+trayBox.width*.04,trayBox.y+trayBox.height*.67);
- assert.equal(await page.locator('#revenue').innerText(),`฿${recipe.reduce((sum,item)=>sum+prices[item],10)}`);assert.match(await page.locator('#served').innerText(),/^1 /);
+ assert.equal(await page.locator('#revenue').innerText(),`฿${Math.round(recipe.reduce((sum,item)=>sum+prices[item],0)*1.1*100)/100}`);assert.match(await page.locator('#served').innerText(),/^1 /);
  await page.locator('#pause').click();assert.equal(await page.locator('#overlay').getAttribute('data-mode'),'pause');await page.locator('#resume').click();
  assert.deepEqual(errors,[]);console.log('PASS: scaled mouse flow, food transfers, service and pause');
 }finally{await browser.close()}

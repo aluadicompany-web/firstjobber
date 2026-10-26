@@ -12,11 +12,11 @@ export const menu: Record<Item, { name: string; price: number; cost: number; sec
 };
 export type Customer = { id: number; name: string; items: Item[]; patience: number; maxPatience: number; accepted: boolean; penaltyCharged?:boolean };
 export const orderTemplates: readonly (readonly Item[])[] = [['chicken','drink'],['chicken','fries'],['chicken'],['chicken','fries','drink'],['fries','drink']];
-export type ReactionEvent = { customerId:number; name:string; index:number; mood:'happy'|'angry' };
+export type ReactionEvent = { customerId:number; name:string; index:number; mood:'happy'|'neutral'|'angry' };
 export type FoodEvent = { type: 'ready' | 'add' | 'return'; item: Item; slot: number };
 export class Shift {
   constructor(private readonly random:()=>number=Math.random, readonly stage:1|2=1, readonly upgrade:Upgrade|null=null) {this.spawnIn=this.arrivalInterval;}
-  get patienceSeconds(){return this.stage===2?44:55;}
+  get patienceSeconds(){return this.stage===2?36:45;}
   cookSeconds(item:Item){return menu[item].seconds-(this.stage===2&&this.upgrade===item?1:0);}
   private orderBag:number[]=[];
   private lastOrder=-1;
@@ -38,7 +38,7 @@ export class Shift {
   paused = false; ended = false; started = false;
   message = 'เปิดร้าน แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์';
   get current() { return this.customers.find(c => c.id === this.selected); }
-  get profit() { return this.revenue - this.costs - this.penalties; }
+  get profit() { return Math.round((this.revenue-this.costs-this.penalties)*100)/100; }
   get trayMatches() {
     return !!this.current?.accepted && [...this.current.items].sort().join() === [...this.tray].sort().join();
   }
@@ -76,7 +76,7 @@ export class Shift {
   }
   private addCustomer(name:string,order:Item[]) {
     const id=this.nextId++;
-    this.customers.push({id,name,items:order,patience:this.patienceSeconds*(name==='เบิร์ด'?.5:1),maxPatience:this.patienceSeconds*(name==='เบิร์ด'?.5:1),accepted:false});
+    this.customers.push({id,name,items:order,patience:10,maxPatience:10,accepted:false});
     if (!this.current) this.selected = id;
   }
   private penalizeBird(c:Customer){
@@ -89,7 +89,9 @@ export class Shift {
   accept() {
     const c = this.current;
     if (!c) return this.say('ยังไม่มีลูกค้าในคิว');
+    if(c.accepted)return;
     c.accepted = true;
+    c.patience=c.maxPatience=this.patienceSeconds*(c.name==='เบิร์ด'?.5:1);
     this.workEvents.push({kind:'cashier'});
     this.say(`รับออเดอร์ #${c.id} คุณ${c.name} แล้ว คลิกสถานีเพื่อทำอาหาร`);
   }
@@ -124,20 +126,23 @@ export class Shift {
   serve() {
     const c = this.current;
     if (!c) return this.say('ยังไม่มีลูกค้าที่เลือกให้เสิร์ฟ');
-    const react=(mood:'happy'|'angry')=>this.reactionEvents.push({customerId:c.id,name:c.name,index:this.customers.indexOf(c),mood});
+    const react=(mood:'happy'|'neutral'|'angry')=>this.reactionEvents.push({customerId:c.id,name:c.name,index:this.customers.indexOf(c),mood});
     if (!c.accepted) {react('angry');return this.say('คลิกตัวลูกค้าเพื่อรับออเดอร์ก่อนเสิร์ฟ');}
     if (!this.trayMatches) {this.penalizeBird(c);react('angry');return this.say(`อาหารยังไม่ตรงออเดอร์คุณ${c.name} ตรวจถาดก่อนเสิร์ฟ`);}
-    react('happy');
-    const tip = c.name!=='เบิร์ด'&&c.patience > 30 ? 10 : 0;
-    const total = c.items.reduce((sum, i) => sum + menu[i].price, 0)*(c.name==='เบิร์ด'?2:1) + tip;
+    const ratio=c.patience/c.maxPatience;
+    const factor=ratio>=.7?1.1:ratio>=.4?1:ratio>=.2?.95:0;
+    react(ratio>=.7?'happy':ratio>=.4?'neutral':'angry');
+    if(!factor)this.penalizeBird(c);
+    const base=c.items.reduce((sum,i)=>sum+menu[i].price,0)*(c.name==='เบิร์ด'?2:1);
+    const total=Math.round(base*factor*100)/100;
     this.moneyEvents.push({amount:total});
     this.workEvents.push({kind:'cashier'});
-    this.revenue += total; this.served++; this.combo++; this.tray = [];
+    this.revenue = Math.round((this.revenue+total)*100)/100; this.served++; this.combo++; this.tray = [];
     if(this.served%10===0)this.nabi.arrive();
     this.customers = this.customers.filter(x => x.id !== c.id);
     this.selected = this.customers[0]?.id ?? 0;
     this.refillEmptyShop();
-    this.say(`เสิร์ฟให้คุณ${c.name}สำเร็จ! +฿${total}${tip ? ' รวมทิป ฿10' : ''}`);
+    this.say(`เสิร์ฟให้คุณ${c.name}แล้ว · +฿${total} (${factor===1.1?'โบนัส 10%':factor===1?'ราคาปกติ':factor===.95?'ลดราคา 5%':'ช้าเกินไป ไม่ได้รับเงิน'})`);
   }
   tick(dt: number) {
     if (!this.started || this.paused || this.ended || dt <= 0) return;
@@ -156,7 +161,7 @@ export class Shift {
     }
     for (const c of this.customers) c.patience -= dt;
     const lost = this.customers.filter(c => c.patience <= 0);
-    for(const c of lost)this.penalizeBird(c);
+    for(const c of lost){this.penalizeBird(c);this.reactionEvents.push({customerId:c.id,name:c.name,index:this.customers.indexOf(c),mood:'angry'});}
     if (lost.length) {
       this.lost += lost.length; this.combo = 0;
       this.customers = this.customers.filter(c => c.patience > 0);

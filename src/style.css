@@ -63,3 +63,5 @@ html,body{width:100%;height:100%;overflow:hidden}#app{height:100dvh;display:grid
 
 /* Keep the roaming visitor in front of equipment and easy to spot. */
 #nabi{width:82px;height:122px;z-index:12;filter:drop-shadow(0 2px 2px #3e204655)}.nabi-label{font-size:13px;padding:5px 9px;background:#fff0a9;border:2px solid #8544ab;color:#562575}#nabi-notice{position:absolute;top:2%;left:2%;z-index:13;pointer-events:none;padding:10px 14px;background:#fff3c5;border:2px solid #9c63bb;border-radius:10px;color:#60317c;font-size:17px;font-weight:bold;box-shadow:0 4px 10px #38233e33}#nabi-notice small{display:block;font-size:11px;margin-top:4px;font-weight:normal}#nabi-notice[hidden]{display:none}.bird-customer .bubble{box-shadow:0 0 0 2px #bf5465;background:#fff0db}.bird-customer .customer-status{color:#a02438;font-weight:bold}.upgrade-mode #nabi-notice{display:none}
+
+.accept-prompt{font:700 12px Tahoma,sans-serif;color:#973c36;padding:7px 0}.customer-reaction.neutral{background:#fff0a9;border-color:#dbb24a;box-shadow:0 0 0 5px #f5c94b33}

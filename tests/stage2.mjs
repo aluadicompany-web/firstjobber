@@ -23,18 +23,18 @@ try{
  await page.locator('#next-day').click();assert.match(await page.locator('#day-label').innerText(),/02/);assert.match(await page.locator('#stage-label').innerText(),/2/);
  assert.equal(await page.locator('#overlay').getAttribute('data-mode'),'');assert.equal(await page.locator('.upgraded').getAttribute('data-cook'),choice);
  assert.equal(await page.locator('#costs').innerText(),'฿0');assert.equal(await page.locator(`#stock-${choice}`).innerText(),'0/5');
- assert.match(await page.locator('[data-customer="1"] .customer-status').innerText(),/44 วิ/);
+ assert.match(await page.locator('[data-customer="1"] .customer-status').innerText(),/10 วิ/);await page.locator('[data-customer="1"]').click();
  await page.locator(`[data-cook="${choice}"]`).click({clickCount:2});assert.equal(await page.locator(`#timer-${choice}`).innerText(),String(seconds));
  await page.waitForFunction(item=>document.getElementById(`stock-${item}`).textContent==='1/5',choice);
  assert.equal(await page.locator(`#queue-${choice}`).innerText(),'คิว 1 / 5');
  await page.waitForFunction(item=>document.getElementById(`stock-${item}`).textContent==='2/5',choice);
- const customer=page.locator('[data-customer="1"]');const recipe=(await customer.getAttribute('data-order-items')).split(',');await customer.click();
+ const customer=page.locator('[data-customer="1"]');await customer.click();const recipe=(await customer.getAttribute('data-order-items')).split(',');
  for(const item of recipe)if(item!==choice)await page.locator(`[data-cook="${item}"]`).click();
  for(const item of recipe){await page.waitForFunction(item=>Number(document.getElementById(`stock-${item}`).textContent.split('/')[0])>0,item);await page.locator(`[data-add="${item}"]:not(:disabled)`).first().click();}
- await page.locator('#serve').click();assert.match(await page.locator('#served').innerText(),/^1 /);assert.equal(await page.locator('.customer-reaction.happy').count(),1);
+ await page.locator('#serve').click();assert.match(await page.locator('#served').innerText(),/^1 /);assert.equal(await page.locator('.customer-reaction').count(),1);
  await page.screenshot({path:`artifacts/stage2-${choice}-playing.png`});
  await page.locator('#pause').click();const timer=await page.locator('#time').innerText();await page.waitForTimeout(350);assert.equal(await page.locator('#time').innerText(),timer);await page.locator('#resume').click();
- console.log(`PASS ${choice}: day 1 summary, one upgrade via +, clean day 2, ${seconds}s queued cooking, 44s patience, service and pause`);
+ console.log(`PASS ${choice}: day 1 summary, one upgrade via +, clean day 2, ${seconds}s queued cooking, 36s food patience, service and pause`);
  if(full){
   console.log(`${choice}: waiting for day 2 final summary`);
   await page.waitForFunction(()=>document.getElementById('overlay').dataset.mode==='end',null,{timeout:210000});

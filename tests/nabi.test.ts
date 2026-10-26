@@ -8,7 +8,7 @@ function serveOne(g:Shift){
  g.accept();g.cook('drink');g.tick(1);g.add('drink');g.serve();
 }
 test('Nabi arrives exactly at every ten successful orders in either stage, without changing customer slots or finance',()=>{
- for(const stage of [1,2] as const){const g=new Shift(()=>0,stage);g.start();for(let i=1;i<=20;i++){serveOne(g);assert.equal(g.served,i);assert.equal(g.nabi.visits,Math.floor(i/10));if(i%10===0){assert.equal(g.nabi.active,true);assert.equal(g.nabi.elapsed,0);assert.equal(g.customers.length,1);assert.notEqual(g.current?.name,'นาบี');}assert.equal(g.revenue,i*29);assert.equal(g.costs,i*4);assert.equal(g.lost,0);}}
+ for(const stage of [1,2] as const){const g=new Shift(()=>0,stage);g.start();for(let i=1;i<=20;i++){serveOne(g);assert.equal(g.served,i);assert.equal(g.nabi.visits,Math.floor(i/10));if(i%10===0){assert.equal(g.nabi.active,true);assert.equal(g.nabi.elapsed,0);assert.equal(g.customers.length,1);assert.notEqual(g.current?.name,'นาบี');}assert.equal(g.revenue,Math.round(i*20.9*100)/100);assert.equal(g.costs,i*4);assert.equal(g.lost,0);}}
 });
 test('rejected serving never triggers a visit and pause freezes both position and visit time',()=>{
  const g=new Shift(()=>0);g.start();for(let i=0;i<9;i++)serveOne(g);g.serve();assert.equal(g.nabi.visits,0);assert.equal(g.served,9);serveOne(g);g.tick(2);const before=[g.nabi.x,g.nabi.y,g.nabi.elapsed];g.paused=true;g.tick(20);assert.deepEqual([g.nabi.x,g.nabi.y,g.nabi.elapsed],before);g.paused=false;g.tick(6);assert.equal(g.nabi.active,false);assert.equal(g.nabi.visits,1);
