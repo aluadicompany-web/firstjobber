@@ -3,6 +3,7 @@ export type Item = 'chicken' | 'fries' | 'drink';
 export type Upgrade = Exclude<Item,'drink'>;
 export const items: Item[] = ['chicken', 'fries', 'drink'];
 export const capacity = 5;
+export const birdChance = 0.05;
 export const menu: Record<Item, { name: string; price: number; cost: number; seconds: number; icon: string }> = {
   chicken: { name: 'ไก่ทอด', price: 59, cost: 18, seconds: 5, icon: '🍗' },
   fries: { name: 'เฟรนช์ฟรายส์', price: 29, cost: 8, seconds: 3, icon: '🍟' },
@@ -47,6 +48,17 @@ export class Shift {
   start() { this.started = true; this.spawnIn=this.arrivalInterval; this.spawn(); this.say('ดูชื่อและอาหารเหนือหัว แล้วคลิกตัวลูกค้าเพื่อรับออเดอร์'); }
   spawn() {
     if (this.customers.length >= 4) return;
+    // Bird has a 5% chance per arrival; only one Bird can wait at a time.
+    if (this.random() >= 1-birdChance && !this.customers.some(c=>c.name==='เบิร์ด')) {
+      const pool=items.flatMap(item=>Array<Item>(capacity).fill(item));
+      const order:Item[]=[];
+      for(let i=0;i<6;i++){
+        const index=Math.min(pool.length-1,Math.max(0,Math.floor(this.random()*pool.length)));
+        order.push(pool.splice(index,1)[0]);
+      }
+      this.addCustomer('เบิร์ด',order);
+      return;
+    }
     if (!this.orderBag.length) this.orderBag=orderTemplates.map((_,index)=>index);
     const key=(order:readonly Item[])=>[...order].sort().join(',');
     const waiting=new Set(this.customers.map(c=>key(c.items)));
@@ -57,8 +69,11 @@ export class Shift {
     this.orderBag.splice(this.orderBag.indexOf(recipe),1);this.lastOrder=recipe;
     const names=['มิน','เจ','พลอย','ต้น','ฟ้า','แป้ง','บอส','นัท','เมย์','ปอนด์'].filter(name=>!this.customers.some(c=>c.name===name));
     const name=names[Math.min(names.length-1,Math.max(0,Math.floor(this.random()*names.length)))];
+    this.addCustomer(name,[...orderTemplates[recipe]]);
+  }
+  private addCustomer(name:string,order:Item[]) {
     const id=this.nextId++;
-    this.customers.push({id,name,items:[...orderTemplates[recipe]],patience:this.patienceSeconds,maxPatience:this.patienceSeconds,accepted:false});
+    this.customers.push({id,name,items:order,patience:this.patienceSeconds,maxPatience:this.patienceSeconds,accepted:false});
     if (!this.current) this.selected = id;
   }
   select(id: number) { if (this.customers.some(c => c.id === id)) this.selected = id; }

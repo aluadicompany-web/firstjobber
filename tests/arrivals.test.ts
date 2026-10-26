@@ -13,8 +13,8 @@ test('faster service can still reach the goal without exceeding queue capacity',
   let job:{id:number;ready:number}|null=null;
   while(!g.ended){
    if(job&&!g.customers.some(c=>c.id===job!.id))job=null;
-   if(!job&&g.customers.length){g.select(g.customers[0].id);g.accept();for(const item of g.current!.items)if(g.stock[item]===0&&g.queued[item]===0)g.cook(item);job={id:g.selected,ready:g.elapsed+seconds};}
-   if(job&&g.elapsed>=job.ready){g.select(job.id);for(const item of g.current!.items)g.add(item);g.serve();job=null;}
+   if(!job&&g.customers.length){g.select(g.customers[0].id);g.accept();for(const item of ['chicken','fries','drink'] as const){const needed=g.current!.items.filter(i=>i===item).length;while(g.stock[item]+g.queued[item]<needed)g.cook(item);}job={id:g.selected,ready:g.elapsed+seconds};}
+   if(job&&g.elapsed>=job.ready&&g.current!.items.every(item=>g.stock[item]>=g.current!.items.filter(i=>i===item).length)){g.select(job.id);for(const item of g.current!.items)g.add(item);g.serve();job=null;}
    g.tick(.25);assert.ok(g.customers.length<=4);
   }
   assert.ok(g.served>=5,`${seconds}s per order, seed ${seed}: ${g.served} served`);

@@ -14,7 +14,8 @@ test('random orders do not repeat within each bag or across a round boundary',()
  for(let seed=1;seed<=25;seed++){
   let value=seed;const rng=()=>{value=(value*1664525+1013904223)>>>0;return value/4294967296};
   const g=new Shift(rng);const orders:string[]=[];
-  for(let i=0;i<30;i++){g.spawn();assert.equal(g.customers.length,1);orders.push([...g.customers[0].items].sort().join(','));g.customers=[];}
+  for(let i=0;orders.length<30&&i<100;i++){g.spawn();assert.equal(g.customers.length,1);if(g.customers[0].name!=='เบิร์ด')orders.push([...g.customers[0].items].sort().join(','));g.customers=[];}
+  assert.equal(orders.length,30);
   for(let i=0;i<orders.length;i+=5)assert.equal(new Set(orders.slice(i,i+5)).size,5);
   for(let i=1;i<orders.length;i++)assert.notEqual(orders[i],orders[i-1]);
  }
