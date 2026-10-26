@@ -7,7 +7,7 @@ try {
  const p=await b.newPage({viewport:{width:1366,height:768}}),errors=[];
  p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{Math.random=()=>0});
- await p.goto('http://127.0.0.1:5173');await p.locator('#start').click();
+ await p.goto(process.env.GAME_URL??'http://127.0.0.1:5173');await p.locator('#start').click();
  for(let n=1;n<=10;n++){
   const customer=p.locator('[data-customer]').first();await customer.click();
   const order=(await customer.getAttribute('data-order-items')).split(',');
@@ -25,6 +25,7 @@ try {
  assert.equal(await p.locator('#nabi').getAttribute('data-visit'),'1');
  const pos=()=>p.locator('#nabi').evaluate(el=>[el.style.left,el.style.top]);
  assert.equal(await p.locator('#nabi-notice').isVisible(),true);
+ if(await p.locator('#nabi-progress').count())assert.match(await p.locator('#nabi-progress').innerText(),/นาบีมาแล้ว 1 ครั้ง/);
  const a=await pos();await p.waitForTimeout(2200);assert.notDeepEqual(await pos(),a);
  await p.locator('#pause').click();const frozen=await pos();await p.waitForTimeout(600);assert.deepEqual(await pos(),frozen);
  await p.locator('#resume').click();
