@@ -1,5 +1,5 @@
 import {Shift, type Upgrade} from './game';
-export type DaySummary={revenue:number;costs:number;profit:number;served:number;lost:number};
+export type DaySummary={revenue:number;costs:number;penalties:number;profit:number;served:number;lost:number};
 export class Campaign {
   shift:Shift;
   phase:'day'|'upgrade'='day';
@@ -9,8 +9,8 @@ export class Campaign {
   get totalProfit(){return this.shift.stage===2?(this.dayOne?.profit??0)+this.shift.profit:this.shift.profit;}
   openUpgrades(){
     if(this.phase!=='day'||!this.shift.ended||this.shift.stage!==1)return false;
-    const {revenue,costs,profit,served,lost}=this.shift;
-    this.dayOne={revenue,costs,profit,served,lost};this.phase='upgrade';return true;
+    const {revenue,costs,penalties,profit,served,lost}=this.shift;
+    this.dayOne={revenue,costs,penalties,profit,served,lost};this.phase='upgrade';return true;
   }
   chooseUpgrade(item:Upgrade){
     if(this.phase!=='upgrade'||this.selectedUpgrade!==null||(item!=='chicken'&&item!=='fries'))return false;

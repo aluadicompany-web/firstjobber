@@ -24,9 +24,14 @@ try {
  await p.locator('#nabi').waitFor({state:'visible'});
  assert.equal(await p.locator('#nabi').getAttribute('data-visit'),'1');
  const pos=()=>p.locator('#nabi').evaluate(el=>[el.style.left,el.style.top]);
- const a=await pos();await p.waitForTimeout(500);assert.notDeepEqual(await pos(),a);
+ assert.equal(await p.locator('#nabi-notice').isVisible(),true);
+ const a=await pos();await p.waitForTimeout(2200);assert.notDeepEqual(await pos(),a);
  await p.locator('#pause').click();const frozen=await pos();await p.waitForTimeout(600);assert.deepEqual(await pos(),frozen);
- await p.locator('#resume').click();await p.screenshot({path:'artifacts/nabi-desktop.png'});
+ await p.locator('#resume').click();
+ const visitorBox=await p.locator('#nabi').boundingBox(),workerBox=await p.locator('#employee').boundingBox();
+ assert.ok(visitorBox.height>=workerBox.height,'Nabi must be clearly visible at employee scale');
+ assert.equal(await p.locator('#nabi').evaluate(el=>getComputedStyle(el).zIndex),'12');
+ await p.screenshot({path:'artifacts/nabi-desktop.png'});
  await p.setViewportSize({width:390,height:844});await p.waitForTimeout(200);await p.screenshot({path:'artifacts/nabi-mobile.png'});
  assert.equal(await p.locator('#nabi').evaluate(el=>getComputedStyle(el).pointerEvents),'none');
  await p.locator('#nabi').waitFor({state:'hidden',timeout:10000});

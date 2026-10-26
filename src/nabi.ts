@@ -1,8 +1,8 @@
 // A non-interactive visitor: eight seconds per visit, using game time only.
 const route = [
-  {time:0,x:910,y:285}, {time:1.5,x:810,y:420},
-  {time:3,x:520,y:420}, {time:4.5,x:760,y:395},
-  {time:6.5,x:540,y:425}, {time:8,x:910,y:285},
+  {time:0,x:880,y:630}, {time:1.5,x:680,y:650},
+  {time:3,x:260,y:640}, {time:4.5,x:720,y:650},
+  {time:6.5,x:360,y:640}, {time:8,x:880,y:630},
 ];
 export class Nabi {
   active=false; elapsed=0; pending=0; visits=0;
