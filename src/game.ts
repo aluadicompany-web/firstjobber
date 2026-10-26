@@ -1,4 +1,5 @@
 import type { Work } from './employee';
+import { Nabi } from './nabi';
 export type Item = 'chicken' | 'fries' | 'drink';
 export type Upgrade = Exclude<Item,'drink'>;
 export const items: Item[] = ['chicken', 'fries', 'drink'];
@@ -19,6 +20,7 @@ export class Shift {
   cookSeconds(item:Item){return menu[item].seconds-(this.stage===2&&this.upgrade===item?1:0);}
   private orderBag:number[]=[];
   private lastOrder=-1;
+  readonly nabi=new Nabi();
   reactionEvents:ReactionEvent[]=[];
   remaining = 180; elapsed = 0; spawnIn = 6; nextId = 1;
   customers: Customer[] = []; selected = 0;
@@ -124,6 +126,7 @@ export class Shift {
     this.moneyEvents.push({amount:total});
     this.workEvents.push({kind:'cashier'});
     this.revenue += total; this.served++; this.combo++; this.tray = [];
+    if(this.served%10===0)this.nabi.arrive();
     this.customers = this.customers.filter(x => x.id !== c.id);
     this.selected = this.customers[0]?.id ?? 0;
     this.refillEmptyShop();
@@ -133,6 +136,7 @@ export class Shift {
     if (!this.started || this.paused || this.ended || dt <= 0) return;
     dt = Math.min(dt, this.remaining);
     this.remaining = Math.max(0, this.remaining - dt); this.elapsed += dt;
+    this.nabi.tick(dt);
     for (const item of items) {
       let budget = dt;
       while (this.queued[item] > 0 && budget >= this.cooking[item]) {
@@ -152,7 +156,7 @@ export class Shift {
       this.say('ลูกค้ารอนานเกินไปและออกจากร้านแล้ว');
     }
     this.spawnIn -= dt;
-    if (this.remaining <= 0) { this.ended = true; this.say('หมดเวลากะแล้ว'); return; }
+    if (this.remaining <= 0) { this.nabi.close(); this.ended = true; this.say('หมดเวลากะแล้ว'); return; }
     if (this.refillEmptyShop()) return;
     if (this.spawnIn <= 0) { this.spawn(); this.spawnIn = this.arrivalInterval; }
   }
